@@ -25,7 +25,7 @@
     <script src="lib/js/html5shiv.js"></script>
     <![endif]-->
 
-    <script type="text/javascript" src="js/ASCIIMathML.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML"></script>
   </head>
 
   <body>
@@ -104,14 +104,10 @@
           <h2>Bayes' Theorum</h2>
           <p>
 <br>
-amath
-P(A|B) = (P(B|A)P(A)) / (P(B)) = ...
-endmath
+` P(A|B) = (P(B|A)P(A)) / (P(B)) = ...`
           </p>
           <p class="fragment">
-amath
- = (P(B|A)P(A)) / ( P(B|A) P(A) + (1-P(B|A))(1-P(A)))
-endmath
+`= (P(B|A)P(A)) / ( P(B|A) P(A) + (1-P(B|A))(1-P(A)))`
 <br><br>
           </p>
         </section>
@@ -120,9 +116,7 @@ endmath
           <h2>Binary Bayesian Classifier</h2>
             <p>
 <br>
-amath
-P(A) = ( prod_(i=1)^n P(A|W_i) ) /  ( (prod_(i=1)^n P(A|W_i)) + (prod_(i=1)^n (1 - P(A|W_i))) )
-endmath
+`P(A) = ( prod_(i=1)^n P(A|W_i) ) /  ( (prod_(i=1)^n P(A|W_i)) + (prod_(i=1)^n (1 - P(A|W_i))) )`
 <br><br>
             </p>
           <br>
@@ -225,9 +219,8 @@ endmath
               <td></td>
               <td></td>
               <td class="fragment">
-amath
-prod_(i=1)^n P_i</td>
-endmath
+`prod_(i=1)^n P_i`
+              </td>
               <td class="fragment">.225<td>
               <td class="fragment">.075<td>
             </tr>
@@ -237,9 +230,7 @@ endmath
         <section>
             <h2>The Results</h2>
             <p>
-amath
-x = 0.225 / 0.075 = 3
-endmath
+`x = 0.225 / 0.075 = 3`
             </p>
             <p>
               A round, light chocolate is 3 times more likely to have nuts.
@@ -255,9 +246,7 @@ endmath
             Classify as "Nuts" or "No Nuts", with some level of certainty.
           </p>
           <p class="fragment">
-amath
-P(N) = 0.225 / (0.225 + 0.075) = 0.75 = 75%
-endmath
+`P(N) = 0.225 / (0.225 + 0.075) = 0.75 = 75%`
           </p>
           <p class="fragment">
           (We're 75% sure this chocolate has nuts.)
