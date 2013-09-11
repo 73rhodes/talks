@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>Node.JS Module Patterns</title>
+
+        <meta name="description" content="A simple introduction to Node.JS modules by example.">
+        <meta name="author" content="Darren DeRidder">
+
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" href="css/reveal.min.css">
+        <link rel="stylesheet" href="css/theme/moon.css" id="theme">
+
+        <!-- For syntax highlighting -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+
+        <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+        <script>
+            document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+        </script>
+
+        <!--[if lt IE 9]>
+        <script src="lib/js/html5shiv.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+
+        <div class="reveal">
+
+            <!-- Any section element inside of this container is displayed as a slide -->
+            <div class="slides">
+                <section>
+                    <h2>Node.JS Module Patterns</h2>
+                    <h3>Using Simple Examples</h3>
+                    <p>
+                        <small><a href="http://51elliot.blogspot.com">Darren DeRidder</a> / <a href="http://twitter.com/73rhodes">@73rhodes</a></small>
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Modules for n00bs</h2>
+                    <p>
+                        <ul>
+                        <li>Node.JS - a Common.JS Module Implementation</li>
+                        <li>Your code uses <code>require</code> to include modules.</li>
+                        <li>Modules use <code>exports</code> to make things available.</li>
+                        </ul>
+                    </p>
+
+                </section>
+
+                <section>
+                    <h2>The Simplest Module</h2>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // hello.js
+    console.log('Hello World');
+&nbsp;
+                    </code></pre>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // app.js
+    require('hello.js');
+&nbsp;
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h3>Pattern 1: Export a Global Function</h3>
+                    <p>Don't do this.</p>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // foo.js
+    foo = function () {
+      console.log('foo!');
+    }
+&nbsp;
+                    </code></pre>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // app.js
+    require('./foo.js');
+    foo();
+&nbsp;
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h3>Pattern 2: Export an Anonymous Function</h3>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // bar.js
+    module.exports = function () {
+      console.log('bar!');
+    }
+&nbsp;
+                    </code></pre>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // app.js
+    var bar = require('./bar.js');
+    bar();
+&nbsp;
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h3>Pattern 3: Export a Named Function</h3>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // fiz.js
+    exports.fiz = function () {
+      console.log('fiz!');
+    }
+&nbsp;
+                    </code></pre>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // app.js
+    var fiz = require('./fiz.js').fiz;
+    fiz();
+&nbsp;
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h3>Pattern 4: Export an Anonymous Object</h3>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // buz.js
+    var Buz = function () {};
+
+    Buz.prototype.log = function () {
+      console.log('buz!');
+    };
+
+    module.exports = new Buz();
+&nbsp;
+                    </code></pre>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // app.js
+    var buz = require('./buz.js');
+    buz.log();
+&nbsp;
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h3>Pattern 5: Export a Named Object</h3>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // baz.js
+    var Baz = function () {};
+
+    Baz.prototype.log = function () {
+      console.log('baz!');
+    };
+
+    exports.Baz = new Baz();
+
+&nbsp;
+                    </code></pre>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // app.js
+    var baz = require('./baz.js').Baz;
+    baz.log();
+&nbsp;
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h3>Pattern 6: Export an Object Prototype</h3>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // qux.js
+    var Qux = function () {};
+
+    Qux.prototype.log = function () {
+      console.log('baz!');
+    };
+
+    exports.Qux = Qux;
+
+&nbsp;
+                    </code></pre>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    // app.js
+    var Qux = require('./qux.js').Qux;
+    var qux = new Qux();
+    qux.log();
+&nbsp;
+                    </code></pre>
+                </section>
+
+                <section>
+                <h1>Thanks!</h1>
+                <a href="http://darrenderidder.github.io/talks/ModulePatterns">
+                http://darrenderidder.github.io/talks/ModulePatterns
+                </a>
+                </section>
+
+            </div>
+
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.min.js"></script>
+
+        <script>
+
+            // Full list of configuration options available here:
+            // https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                controls: true,
+                progress: true,
+                history: true,
+                center: true,
+
+                theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+                transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+                // Optional libraries used to extend on reveal.js
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+                    { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+                ]
+            });
+
+        </script>
+
+    </body>
+</html>
