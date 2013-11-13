@@ -40,20 +40,61 @@
                     <h2>Node.JS Module Patterns</h2>
                     <h3>Using Simple Examples</h3>
                     <p>
-                        <small><a href="http://51elliot.blogspot.com">Darren DeRidder</a> / <a href="http://twitter.com/73rhodes">@73rhodes</a></small>
+                    <small>
+                      <a href="http://51elliot.blogspot.com">
+                        Darren DeRidder
+                      </a>
+                      / 
+                      <a href="http://twitter.com/73rhodes">
+                        @73rhodes
+                      </a>
+                    </small>
                     </p>
                 </section>
 
                 <section>
-                    <h2>Modules for n00bs</h2>
-                    <p>
-                        <ul>
-                        <li>Node.JS - a Common.JS Module Implementation</li>
-                        <li>Your code uses <code>require</code> to include modules.</li>
-                        <li>Modules use <code>exports</code> to make things available.</li>
-                        </ul>
-                    </p>
+                    <section>
+                        <h2>Modules for <code>n00bs</code></h2>
+                        <p>
+                            <ul>
+                            <li>Node.JS - a Common.JS Module Implementation</li>
+                            <li>Your code uses <code>require</code> to include modules.</li>
+                            <li>Modules use <code>exports</code> to make things available.</li>
+                            </ul>
+                        </p>
+                    </section>
+                    <section>
+                       <h3>Common.JS</h3>
+                       <p>
+                       An ecosystem for JavaScript
+                       outside the browser
+                       </p>
+                       <ul>
+                           <li>Modules</li>
+                           <li>Promises</li>
+                           <li>Binary </li>
+                           <li>Filesystem</li>
+                           <li>Console</li>
+                           <li>System</li>
+                           <li>Testing</li>
+                    </section>
 
+                    <section>
+                        Kevin Dangoor, <a href="http://www.blueskyonmars.com/2009/01/29/what-server-side-javascript-needs/">What Server Side JavaScript Needs</a>
+                        <blockquote cite="http://www.blueskyonmars.com/2009/01/29/what-server-side-javascript-needs/">
+                        "What I’m describing here is not a technical problem. It’s a matter of people getting together and making a decision to step forward and start building up something bigger and cooler together."
+                        </blockquote>
+                    </section>
+
+                    <section>
+                        <h3>Common.JS Implementations</h3>
+                        <ul>
+                            <li>MongoDB</li>
+                            <li>CouchDB</li>
+                            <li>SproutCore</li>
+                            <li>Node.JS</li>
+                        </ul>
+                    </section>
                 </section>
 
                 <section>
@@ -70,6 +111,7 @@
     require('hello.js');
 &nbsp;
                     </code></pre>
+<!--
                     <pre><code data-trim contenteditable>
 &nbsp;
     node app.js
@@ -77,11 +119,16 @@
     Hello World!
 &nbsp;
                     </code></pre>
+-->
                 </section>
 
+        <section>
+            implied facepalm...<br/>
+            <img src="facepalm.jpg"></img>
+        </section>
+
                 <section>
-                    <h3>Pattern 1: Define a Global Function</h3>
-                    <p>Don't do this.</p>
+                    <h3>Pattern 1: Define a Global</h3>
                     <pre><code data-trim contenteditable>
 &nbsp;
     // foo.js
@@ -98,6 +145,11 @@
 &nbsp;
                     </code></pre>
                 </section>
+
+        <section>
+        <img src="dontdoit.jpg"></img><br/>
+        don't pollute the global space
+        </section>
 
                 <section>
                     <h3>Pattern 2: Export an Anonymous Function</h3>
@@ -172,7 +224,6 @@
     };
 
     exports.Baz = new Baz();
-
 &nbsp;
                     </code></pre>
                     <pre><code data-trim contenteditable>
@@ -184,8 +235,32 @@
                     </code></pre>
                 </section>
 
+        <section>
+          <h3>Pattern 6: Export an Anonymous Prototype</h3>
+              <pre><code data-trim contenteditable>
+&nbsp;
+    // doo.js
+    var Doo = function {};
+
+    Doo.prototype.log = function () {
+        console.log('doo!');
+    }
+
+    module.exports = Doo;
+&nbsp;
+                </code></pre>
+              <pre><code data-trim contenteditable>
+&nbsp;
+    // app.js
+    var Doo = require('./doo.js');
+    var doo = new Doo();
+    doo.log();
+&nbsp;
+                </code></pre>
+        </section>
+
                 <section>
-                    <h3>Pattern 6: Export an Object Prototype</h3>
+                    <h3>Pattern 7: Export a Named Prototype</h3>
                     <pre><code data-trim contenteditable>
 &nbsp;
     // qux.js
@@ -196,7 +271,6 @@
     };
 
     exports.Qux = Qux;
-
 &nbsp;
                     </code></pre>
                     <pre><code data-trim contenteditable>
@@ -210,7 +284,24 @@
                 </section>
 
                 <section>
-                <h1>Thanks!</h1>
+                    <h3>Pros and Cons</h3>
+                    <p>
+                        Named exports - one module, many exported things
+                    </p><p>
+                        Anonymous exports - simpler client interface
+                    </p>
+                </section>
+
+                <section>
+                    <code>module.exports</code>
+                    <br/>
+                    <strong>VS</strong>
+                    <br/>
+                    <code>exports</code>
+                </section>
+
+                <section>
+                <h3>Thanks!</h3>
                 <a href="http://darrenderidder.github.io/talks/ModulePatterns">
                 http://darrenderidder.github.io/talks/ModulePatterns
                 </a>
@@ -228,6 +319,7 @@
             // Full list of configuration options available here:
             // https://github.com/hakimel/reveal.js#configuration
             Reveal.initialize({
+                margin: 0,
                 controls: true,
                 progress: true,
                 history: true,
