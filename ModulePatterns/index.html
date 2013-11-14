@@ -240,7 +240,7 @@
               <pre><code data-trim contenteditable>
 &nbsp;
     // doo.js
-    var Doo = function {};
+    var Doo = function () {};
 
     Doo.prototype.log = function () {
         console.log('doo!');
@@ -293,11 +293,62 @@
                 </section>
 
                 <section>
-                    <code>module.exports</code>
-                    <br/>
-                    <strong>VS</strong>
-                    <br/>
-                    <code>exports</code>
+                    <section>
+                        <code>module.exports</code>
+                        <br/>
+                        <strong>VS</strong>
+                        <br/>
+                        <code>exports</code>
+                    </section>
+                    <section>
+                      <strong>
+                        <code>exports</code> VS. <code>module.exports</code>
+                      </strong>
+                      <ul>
+                        <li>
+                          <code>exports</code> is an alias to
+                          <code>module.exports</code>.
+                        </li>
+                        <li>
+                          node automatically creates it as a convenient
+                          shortcut.
+                        </li>
+                        <li>For assigning named properties, use either one.</li>
+                      <pre><code data-trim contenteditable>
+&nbsp;
+> module.exports.fiz = "fiz";
+> exports.buz = "buz";
+> module.exports === exports;
+true
+                      </code></pre>
+                    </section>
+
+                    <section>
+                      <h3>Warning</h3>
+                      <ul>
+                        <li>
+                          Assigning anything to <code>exports</code> directly
+                          (instead of <code>exports.<i>something</i></code>)
+                          will <i>overwrite</i> the exports alias.
+                        </li> 
+                      <pre><code data-trim contenteditable>
+&nbsp;
+> module.exports.qux = "qux";
+> exports
+{ qux: "qux" }
+> exports === module.exports
+true
+> exports = "wobble wibble wubble!";
+> exports === module.exports
+false
+> exports
+"wobble wibble wubble!"
+> module.exports
+{ qux: "qux" }
+// module.exports is canonical
+&nbsp;
+                      </code></pre>
+                    </section>
                 </section>
 
                 <section>
