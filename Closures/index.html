@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>Closures for 6 yr olds</title>
+
+        <meta name="description" content="A simple introduction to JavaScript closures by example.">
+        <meta name="author" content="Darren DeRidder">
+
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" href="css/reveal.min.css">
+        <link rel="stylesheet" href="css/theme/solarized.css" id="theme">
+
+        <!-- For syntax highlighting -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+
+        <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+        <script>
+            document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+        </script>
+
+        <!--[if lt IE 9]>
+        <script src="lib/js/html5shiv.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+
+        <div class="reveal">
+
+            <!-- Any section element inside of this container is displayed as a slide -->
+            <div class="slides">
+                <section>
+                    <h2>JavaScript Closures</h2>
+                    <h3>for 6 year olds</h3>
+                    <p>
+                    <small>
+                      <a href="http://51elliot.blogspot.com">
+                        Darren DeRidder
+                      </a>
+                      / 
+                      <a href="http://twitter.com/73rhodes">
+                        @73rhodes
+                      </a>
+                    </small>
+                    </p>
+                </section>
+
+                <section>
+                        <h2>What's a closure?</h2>
+                        <blockqoute cite="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Closures">
+                        "Closures are functions that refer to independent
+                        (free) variables." [MDN]
+                        </blockquote>
+                 </section>
+
+                 <section>
+                       <h3>Why Closures?</h3>
+                       <ul>
+                         <li>Common in JavaScript.</li>
+                         <li>Node.JS callbacks.</li>
+                         <li>Some practical uses.</li>
+                         <li>Some unexpected problems.</li>
+                       </ul>
+                 </section>
+
+		<section data-background="feynman.jpg">
+                  <blockquote style="color: white; background: rgba(64,64,64,0.6);">
+		  "If you can't explain it to a six year old, you don't really understand it." - Richard Feynman
+                  </blockquote>
+		</section>
+
+                <section>
+                    <h2>The Simplest Closure</h2>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    var x = 1;
+    function bar() {
+      return x;
+    }
+&nbsp;
+                    </code></pre>
+                </section>
+
+        <section data-background="travel.png">
+		<h3>The Traveller</h3>
+                <blockquote style="color: black; background: rgba(230,225,220,0.9);">
+		<p>
+		A man goes on a long trip. Before leaving, he takes a snapshot
+                of his house. 
+                <p>
+                While he's away, the house is replaced with a 
+                condo. The man is unaware and continues to show the photo and 
+                describe his house to the people he meets.
+		</blockquote>
+        </section>
+
+                <section>
+                    <h3>The Traveller code example</h3>
+                    <pre><code data-trim contenteditable>
+&nbsp;
+    var color = 'white';
+
+    function leaveHome () {
+       // a variable in leaveHome's scope
+       var description = "My house is " + color;
+       // returns another function, creating a closure over description
+       return function() {
+          console.log(description);
+       }
+    }
+
+    var travellingMan = leaveHome();
+    travellingMan(); // "My house is white"
+    color = 'red';   // They painted the house
+    travellingMan(); // "My house is white"
+&nbsp;
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h3>Things to Notice</h3>
+                    <ol>
+		      <li>In Javascript, functions are objects, too.</li>
+                      <li>Functions can create and return other functions.</li>
+                      <li>Functions can be anonymous.</li>
+		      <li>The returned function "closes over" the variables in
+                          the scope where it was created, forming a closure.</li>
+                    </ol>
+                </section>
+                <section>
+                   <h3>More examples</h3>
+                    <ul>
+                      <li>An "inner function" is a closure.</li>
+                      <li>Functions that get returned are closures.</li>
+                      <li>Functions that get passed (ie. callbacks) are closures.</li>
+                      <li>Any function that accesses variables outside it's immediate lexical scope is a closure.</li>
+                    </ul>
+               </section>
+
+                <section>
+                    <h3>Related Methods</h3>
+                     <ul>
+                     <li>Function.call</li>
+                     <li>Function.apply</li>
+                     <li>Function.bind</li>
+                     <ul>
+                </section>
+
+                <section>
+                <h3>Thanks!</h3>
+                <a href="http://darrenderidder.github.io/talks/Closures">
+                http://darrenderidder.github.io/talks/Closures
+                </a>
+                </section>
+
+            </div>
+
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.min.js"></script>
+
+        <script>
+
+            // Full list of configuration options available here:
+            // https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                margin: 0,
+                controls: true,
+                progress: true,
+                history: true,
+                center: true,
+
+                theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+                transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+                // Optional libraries used to extend on reveal.js
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+                    { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+                ]
+            });
+
+        </script>
+
+    </body>
+</html>
