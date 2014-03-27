@@ -1,1 +1,1 @@
-http://darrenderidder.github.io/talks/ModulePatterns
+http://darrenderidder.github.io/talks/Closures
