@@ -46,13 +46,13 @@ loginform.html
 widgets.js
 ```javascript
 // Populate widgets
-function ksLoader() {
-  $('[data-kswidget]').each(function () {
-    var widget = $(this).attr('data-kswidget');
-    $(this).load('./kswidgets/' + widget + '.html');
+function widgetLoader() {
+  $('[data-widget]').each(function () {
+    var widget = $(this).attr('data-widget');
+    $(this).load(widget + '.html');
   });
 }
 
-// run ksLoader when page has loaded
-$(document).ready(ksLoader);
+// run widgetLoader when page has loaded
+$(document).ready(widgetLoader);
 ```    
