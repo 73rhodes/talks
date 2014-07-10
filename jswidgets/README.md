@@ -30,7 +30,7 @@ A page using a javascript widget.
 <!DOCTYPE html>
 <html>
   <body>
-    <div widget="loginform"></div>
+    <div data-widget="loginform"></div>
     <script src="widgets.js"/>
   </body>
 </html>
@@ -38,7 +38,7 @@ A page using a javascript widget.
 
 **loginform.html**
 
-The widget itself, packaged in an HTML file. Normally this could include a template, some JavaScript, an AJAX query, etc.
+The widget itself, packaged in an HTML file. Super simplified example. Normally this could include a template, some JavaScript, an AJAX query, etc.
 
 ```html
 <form action="login" method="POST">
