@@ -1,7 +1,7 @@
 JavaScript Widgets
 ------------------
 
-The concept:
+**The concept**
 
   * A collection of one-line HTML tags that automagically turn into more complex widgets
   * Example: ```<div data-widget="loginform"/>``` turns into a complete login form
@@ -10,11 +10,11 @@ The concept:
   * Very easy to create customised user interfaces by re-assembling widgets
   * Rather than re-skinning a one-size-fits-all product, allow per-customer, custom reconfigurations
 
-Early examples:
+**Early examples**
    * Coursera: http://blog.pamelafox.org/2013/05/frontend-architectures-server-side-html.html
    * London Design Museum: http://alexmarandon.com/articles/web_widget_jquery/
 
-Related efforts:
+**Related efforts**
    * W3C web components specification
    * Polymer
    * Angular has the idea of re-usable components
@@ -22,7 +22,7 @@ Related efforts:
 Example
 -------
 
-*demo.html*
+**demo.html**
 
 A page using a javascript widget.
 
@@ -36,7 +36,7 @@ A page using a javascript widget.
 </html>
 ```
 
-*loginform.html*
+**loginform.html**
 
 The widget itself, packaged in an HTML file. Normally this could include a template, some JavaScript, an AJAX query, etc.
 
@@ -49,7 +49,7 @@ The widget itself, packaged in an HTML file. Normally this could include a templ
 
 ```
 
-*widgets.js*
+**widgets.js**
 
 The script that does the loading. This example uses jQuery to do it.
 
