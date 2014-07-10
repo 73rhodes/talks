@@ -23,7 +23,7 @@ Example
 -------
 
 demo.html
-```
+```html
 <!DOCTYPE html>
 <html>
   <body>
@@ -34,7 +34,7 @@ demo.html
 ```
 
 loginform.html
-```
+```html
 <form id="loginform-widget" action="login" method="POST">
   <inputname="userid"><br/>
   <input type="password" name="password"><br/>
@@ -44,7 +44,7 @@ loginform.html
 ```
 
 widgets.js
-```
+```javascript
 // Populate widgets
 function ksLoader() {
   $('[data-kswidget]').each(function () {
