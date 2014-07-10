@@ -22,7 +22,10 @@ Related efforts:
 Example
 -------
 
-demo.html
+*demo.html*
+
+A page using a javascript widget.
+
 ```html
 <!DOCTYPE html>
 <html>
@@ -33,7 +36,10 @@ demo.html
 </html>
 ```
 
-loginform.html
+*loginform.html*
+
+The widget itself, packaged in an HTML file. Normally this could include a template, some JavaScript, an AJAX query, etc.
+
 ```html
 <form action="login" method="POST">
   <input name="userid"><br/>
@@ -43,7 +49,10 @@ loginform.html
 
 ```
 
-widgets.js
+*widgets.js*
+
+The script that does the loading. This example uses jQuery to do it.
+
 ```javascript
 // Populate widgets
 function widgetLoader() {
