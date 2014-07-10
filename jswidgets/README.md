@@ -28,7 +28,7 @@ demo.html
 <html>
   <body>
     <div widget="loginform"></div>
-    <script src="widgets.js"></div>
+    <script src="widgets.js"/>
   </body>
 </html>
 ```
