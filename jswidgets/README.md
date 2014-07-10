@@ -4,5 +4,55 @@ JavaScript Widgets
 The concept:
 
   * A collection of one-line HTML tags that automagically turn into more complex widgets
-  * Example: ```<div data-kswidget="loginform"></div>``` turns into a complete login form
+  * Example: ```<div data-widget="loginform"/>``` turns into a complete login form
+  * Example: ```<div data-widget="accountdetails"/>``` turns into a display of account info
+  * Building blocks of functionality that can be copy-pasted into pages 
+  * Very easy to create customised user interfaces by re-assembling widgets
+  * Rather than re-skinning a one-size-fits-all product, allow per-customer, custom reconfigurations
+
+Early examples:
+   * Coursera: http://blog.pamelafox.org/2013/05/frontend-architectures-server-side-html.html
+   * London Design Museum: http://alexmarandon.com/articles/web_widget_jquery/
+
+Related efforts:
+   * W3C web components specification
+   * Polymer
+   * Angular has the idea of re-usable components
   
+Example
+-------
+
+demo.html
+```
+<!DOCTYPE html>
+<html>
+  <body>
+    <div widget="loginform"></div>
+    <script src="widgets.js"></div>
+  </body>
+</html>
+```
+
+loginform.html
+```
+<form id="loginform-widget" action="login" method="POST">
+  <inputname="userid"><br/>
+  <input type="password" name="password"><br/>
+  <input type="submit" type="submit">Sign in</input>
+</form>
+
+```
+
+widgets.js
+```
+// Populate widgets
+function ksLoader() {
+  $('[data-kswidget]').each(function () {
+    var widget = $(this).attr('data-kswidget');
+    $(this).load('./kswidgets/' + widget + '.html');
+  });
+}
+
+// run ksLoader when page has loaded
+$(document).ready(ksLoader);
+```    
