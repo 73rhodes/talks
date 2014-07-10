@@ -35,8 +35,8 @@ demo.html
 
 loginform.html
 ```html
-<form id="loginform-widget" action="login" method="POST">
-  <inputname="userid"><br/>
+<form action="login" method="POST">
+  <input name="userid"><br/>
   <input type="password" name="password"><br/>
   <input type="submit" type="submit">Sign in</input>
 </form>
