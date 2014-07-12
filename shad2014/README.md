@@ -23,5 +23,5 @@ Additional resoures
 
   * raw raw.densitydesign.org
   * envision.js http://www.humblesoftware.com/envision/index
-  * philogb demos philogb.github.io
+  * philogb demos http://philogb.github.io
   
