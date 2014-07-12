@@ -21,7 +21,7 @@ http://dimplejs.org/
 
 Additional resoures
 
-  * raw raw.densitydesign.org
+  * raw http://raw.densitydesign.org
   * envision.js http://www.humblesoftware.com/envision/index
   * philogb demos http://philogb.github.io
   
