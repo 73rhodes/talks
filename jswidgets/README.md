@@ -3,12 +3,12 @@ JavaScript Widgets
 
 **The concept**
 
-  * A collection of one-line HTML tags that automagically turn into more complex widgets
-  * Example: ```<div data-widget="loginform"/>``` turns into a complete login form
-  * Example: ```<div data-widget="accountdetails"/>``` turns into a display of account info
-  * Building blocks of functionality that can be copy-pasted into pages 
-  * Very easy to create customised user interfaces by re-assembling widgets
-  * Rather than re-skinning a one-size-fits-all product, allow per-customer, custom reconfigurations
+  * Create one-line HTML tags to embed more complex functionality into web pages
+  * Example: ```<div data-widget="datepicker"/>``` embeds a complete date picker
+  * Example: ```<div data-widget="accountdetails"/>``` embeds display of account info
+  * Widgets give you building blocks of functionality that can be copy-pasted into pages in any arrangement
+  * Very easy to create customised user experiences
+  * Rather than re-skinning a one-size-fits-all product, allow custom reconfigurations for each client
 
 **Early examples**
    * Coursera: http://blog.pamelafox.org/2013/05/frontend-architectures-server-side-html.html
@@ -30,7 +30,10 @@ A page using a javascript widget.
 <!DOCTYPE html>
 <html>
   <body>
+    // here's the widget to embed
     <div data-widget="loginform"></div>
+
+    // here's the script that loads widgets
     <script src="widgets.js"/>
   </body>
 </html>
@@ -41,12 +44,16 @@ A page using a javascript widget.
 The widget itself, packaged in an HTML file. Super simplified example. Normally this could include a template, some JavaScript, an AJAX query, etc.
 
 ```html
-<form action="login" method="POST">
+<form id="loginform" action="login" method="POST">
   <input name="userid"><br/>
   <input type="password" name="password"><br/>
-  <input type="submit" type="submit">Sign in</input>
+  <button type="submit" class="btn">Sign in</button>
 </form>
-
+<script>
+  $("#loginform button").click(function() {
+    alert("Log in stuff happens");
+  });
+</script>
 ```
 
 **widgets.js**
