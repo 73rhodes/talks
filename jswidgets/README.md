@@ -30,11 +30,13 @@ A page using a javascript widget.
 <!DOCTYPE html>
 <html>
   <body>
-    // here's the widget to embed
+
+    <!-- here's the widget to embed-->
     <div data-widget="loginform"></div>
 
-    // here's the script that loads widgets
+    <!--here's the script that loads widgets-->
     <script src="widgets.js"/>
+    
   </body>
 </html>
 ```
