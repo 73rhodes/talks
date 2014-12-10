@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>I &lt;3 Callbacks</title>
+
+    <meta name="description" content="Taming the Pyramid of Doom the Simple Way">
+    <meta name="author" content="Darren DeRidder">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="stylesheet" href="css/reveal.min.css">
+    <link rel="stylesheet" href="css/theme/solarized.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- If the query includes 'print-pdf', include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+      }
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <h1>I &lt;3 Callbacks</h1>
+          <h3>Taming the Pyramid of Doom</h3>
+          (the simple way)
+        </section>
+
+        <section>
+          <h2>About Me</h2>
+          <p>
+            <small><a href="http://about.me/drderidder">Darren DeRidder</a> / <a href="http://twitter.com/73rhodes">@73rhodes</a></small><br/>
+            Alcatel-Lucent - Motive Mobile Security<br>
+            Real-time, AAA, Telecom, Network &amp; Mobile Security<br>
+            Mobile World Congress<br/>
+            Blackhat Security Conference<br>
+            Ottawa JavaScript<br>
+          </p>
+
+          <aside class="notes">
+            Thanks to:<br/>
+            Thomas, David, Dan, Simon M, Simon K, Owain, Nick.
+            Mark, Jillian, Randy, Fabien.
+            Toushay, Teldio, CanvasPop, Magmic Games, IBM, MXI, Shopify, Adobe
+          </aside>
+        </section>
+
+        <section>
+
+          <section>
+            <h2>Synchronous</h2>
+            <img src="./linearity.png"></img>
+          </section>
+
+          <section>
+            <h3>Synchronous Programming</h3>
+            <ul>
+              <li>Linear</li>
+              <li>Easy to understand</li>
+              <li>Functions return values</li>
+              <li>Code reads like a story</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Synchronous Code</h3>
+              <pre><code data-trim contenteditable>
+function add (a, b) {
+  return a + b;
+}
+
+var c = add (9, 33);
+
+myElement.innerHTML = c;
+              </pre></code>
+          </section>
+
+        </section>
+
+        <section>
+
+          <section>
+            <h2>Asynchronous</h2>
+            <img src="./nonlinearity.png"></img>
+          </section>
+
+          <section>
+            <h3>Asynchronous Programming</h3>
+            <ul>
+              <li>non-linear</li>
+              <li>harder to reason about</li>
+              <li>choose-your-own-adventure</li>
+              <li>callbacks</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Asynchronous APIs</h3>
+            <ul>
+              <li>AJAX</li>
+              <li>HTML5 Geolocation</li>
+              <li>HTML5 Web Workers</li>
+              <li>IndexedDB</li>
+              <li>Node.JS</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Asynchronous Code</h3>
+            <pre><code data-trim contenteditable>
+$.ajax({
+  type: 'POST',
+  url: "path/to/api",
+  data: "banana=yellow",
+  success: function (data) {
+    alert("Success: " + data);
+  }
+});
+            </code></pre>
+          </section>
+
+        </section>
+
+        <section>
+          <section>
+            <h2>Continuation Passing Style</h2>
+            <pre style="background:#EFEFEF;">
+
+ do something (
+     with these parameters,
+     afterwards call this function with the result
+ )
+            </pre>
+            <pre><code data-trim contenteditable>
+fs.readFile('todo.txt', function(err, data) {
+  if (err) {
+    console.log('Error reading file: ' + err)
+  } else {
+    console.log(data);
+  }
+});
+            </code></pre>
+            <p class="fragment">Leads to...</p>
+          </section>
+
+          <section>
+            <h3>Callback Hell</h3>
+              <pre><code data-trim contenteditable>
+fs.readdir(source, function(err, files) {
+  if (err) {
+    console.log('Error finding files: ' + err)
+  } else {
+    files.forEach(function(filename, fileIndex) {
+      console.log(filename)
+      gm(source + filename).size(function(err, values) {
+        if (err) {
+          console.log('Error identifying file size: ' + err)
+        } else {
+          console.log(filename + ' : ' + values)
+          aspect = (values.width / values.height)
+          widths.forEach(function(width, widthIndex) {
+            height = Math.round(width / aspect)
+            console.log('resizing ' + filename + 'to ' + height + 'x' + height)
+            this.resize(width, height).write(destination + 'w' + width + '_' + filename, function(err) {
+              if (err) console.log('Error writing file: ' + err)
+            })
+          }.bind(this))
+        }
+      })
+    })
+  }
+})
+            </code></pre>
+            <p class="fragment">Leads to...</p>
+          </section>
+ 
+          <section>
+            <h3>Control Flow Libraries</h3>
+            <p class="fragment">lots and lots of them</p>
+            <p class="fragment">
+            yuemeng $N async-mini async.js async backbone-callbacks begin condvar 
+            chainsaw channels cloudd ctrl deferred deferred-queue each eventproxy
+            finish first flow-js flowless funk futures galaxy gate gene groupie
+            ice-stream Ignite jam JobManager jscex-jquery LAEH2 locker make-flow
+            miniqueue narrow nestableflow neuron node-async node-block node-chain
+            node-continuables node-cron node-crontab node-fnqueue node-inflow
+            node-parallel node-promise node.flow noflo nThen nue observer pausable
+            pipette poolr promise q QBox Rubberduck statechart SCION serialize
+            seq Signals simple-schedule Slide sode.js Step stepc streamify 
+            suspend taskman timequeue TwoStep when zo.js y-yield ... 
+            </p>
+          </section>
+
+          <section>
+            asyncblock asyncflow fiberize fibers-promise fibers sync Cinch
+            Wind.js qjs sjs streamline.js syncasync.js tamejs promises 
+            wsl-promises mock-promises promises-promises ql naive-promesse
+            spai bluebid pacta avec yapa th tillthen microromise await qall
+            noq sinon-promise pangako deferredjs este-dispather ahead jqx
+            yapawapa fate callbackify then-all troth augur neder avow prfun
+            qdomin clues minq then-node zee pooldis assure qplux z-core
+            bluecache resolved dom-futures risposta memoblock concurrent
+            fantasy-async heya-async pgpromise q-step orchard legendary
+            covenant qx conterfeit faithful qpatch noob_pact fsp 
+            stepthrough diva milestonesjs qtree psqueue flourine qsub
+            majic async-done underpromise ninvoke then-all-settled-in 
+            then-all-in execution-pool prim kew d.js ncall q-lazy lag
+
+            </p>
+            <p>
+              and 1,847 more...
+            </p>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>Promises?</h2>
+            <p>Removed from Node core in 2010 by Ryan</p>
+            <p class="fragment">
+            Suggesting that promises should go back in core
+            <img src="http://media.tumblr.com/3a135ef80fbb238fd30154ccd38e604d/tumblr_mjh2luxMTr1s54fggo1_500.gif"></img>
+             <small>
+             <a href="http://nodejsreactions.tumblr.com/post/65344663524">http://nodejsreactions.tumblr.com/post/65344663524 </a>
+             </small>
+            </p>
+          </section>
+
+          <section>
+            <img src="./tjonpromises.png"></img>
+            <p class="fragment">
+            ...plus Trever Norris, Isaac Schlueter, Fedor Idutny, Mikeal Rogers, Ryan Dahl,
+            Rodd Vagg...
+            (the whole node core dev team)
+            </p>
+          </section>
+
+          <section>
+            <h3>Node core philosophy</h3>
+            <ul>
+              <li>decisions that lead to maximum compatibility</li>
+              <li>keep core small and light</li>
+              <li>high level flow-control abstractions in user libs</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>some thoughts on promises</h3>
+            <ul>
+              <li>
+                <a href="http://andrewkelley.me/post/js-callback-organization.html">Callbacks are really okay</a>
+              </li>
+              <li>
+                <a href="http://sealedabstract.com/code/broken-promises/">Promises have unexpected costs</a>
+              </li>
+              <li>
+                <a href="http://r.va.gg/presentations/webdirections-code-2014/#20">Callbacks are the fundamental unit of async in JS.</a>
+              </li>
+              <li>
+                <a href="http://eamodeorubio.github.io/tamingasync/#/23">Promises don't work for many use cases</a>
+              </li>
+              <li>
+                <a href="http://www.futurealoof.com/posts/broken-promises.html">Flow control not defined in core by design</a>
+              </li>
+              <li>
+                <a href="http://blog.trevnorris.com/2014/02/nodejs-es6-and-me.html">Integrating c++ / libuv only possible with callbacks</a>
+              </li>
+            </ul>
+          </section>
+ 
+        </section>
+
+        <section>
+          <h3>Simple Rules for Escaping Callback Hell</h3>
+          <ol>
+            <li>Use named functions for callbacks</li>
+            <li>Use nesting only to enclose variable scope</li>
+            <li>Return when invoking the callback</li>
+          </ol>
+        </section>
+
+        <section>
+          <h3>The Pyramid of Doom</h3>
+          <img style="height: 600px;" src="./callbacks1.png"></img>
+        </section>
+
+        <section>
+          <section>
+            <h3>Named Callbacks</h3>
+            <ul>
+              <li>Avoid non-trivial anonymous functions</li>
+              <li>Put function declarations after code that uses them</li>
+            </ul>
+            <pre><code data-trim contenteditable>
+
+somethingAsync(params, namedCallback);
+
+function namedCallback(err, result) { 
+  // handle error, result
+}
+
+            </code></pre>
+          </section>
+
+          <section>
+            <h3>Named Callbacks</h3>
+            <img style="height: 600px;" src="./callbacks2.png"></img>
+          </section>
+
+        </section>
+
+        <section>
+          <section>
+            <h3>Nest for Scope</h3>
+             Nested functions share variables in the enclosing scope
+            <pre><code data-trim contenteditable>
+function foo() {
+  var x = 1;            // in foo's scope
+
+  function bar() {
+    var y = 2;          // in bar's scope
+    console.log(x + y); // 3
+  }
+
+  function fizz() {
+    var z = 3;          // in fizz's scope
+    console.log(x + z); // 4
+  }
+
+  console.log(y); // undefined
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <h3>Nest for Scope</h3>
+            <img style="height: 600px;" src="./callbacks3.png"></img>
+          </section>
+
+        </section>
+
+        <section>
+          <section>
+            <h3>Return when invoking callbacks</h3>
+            <pre><code data-trim contenteditable>
+function myAsyncFunction (params, callback) {
+
+  // You do something asynch...
+  
+  // You handle the result
+  function handleResult(err, result) {
+    if (err) {
+      return callback(err);
+    }
+    // do something with data
+    return callback(null, data);
+  }
+
+}
+
+            </code></pre>
+          </section>
+
+          <section>
+            <h3>Return when invoking callbacks</h3>
+            <img style="height: 600px;" src="./callbacks4.png"></img>
+          </section>
+        </section>
+
+        <section>
+          <h3>Further Reading</h3>
+          <ul>
+            <li><a href="callbackhell.com">callbackhell.com</a></li>
+            <li><a href="http://andrewkelley.me/post/js-callback-organization.html">JavaScript Callbacks Are Pretty Okay</a></li>
+            <li><a href="http://51elliot.blogspot.ca/2014/11/three-simple-rules-for-escaping.html">Three Simple Rules for Escaping Callback Hell</a></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Thanks!</h2>
+          http://darrenderidder.github.io/talks/callbacks
+        </section>
+      </div>
+
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.min.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+        // parallaxBackgroundSize: '2100px 900px',
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+          { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
