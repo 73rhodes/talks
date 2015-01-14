@@ -35,6 +35,7 @@ http://flowtype.org
     ```
  
 ## Examples
+  * Prerequisites - `.flowconfig` file in dir or parent dir, `/* @flow */` header.
   * Hello World - basic type checking; ie multiply function called with a string
   * Nullable Types - function to return x.length called with null
   * Dynamic Code - function to return x.length called with string and number
