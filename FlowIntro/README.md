@@ -35,5 +35,10 @@ http://flowtype.org
     ```
  
 ## Examples
-  * Hello World - basic type checking
-  * 
+  * Hello World - basic type checking; ie multiply function called with a string
+  * Nullable Types - function to return x.length called with null
+  * Dynamic Code - function to return x.length called with string and number
+
+## More advanced usage
+  * Flow does not do type inference across module boundaries. That requires type annotations in the `require`d module
+  * Also check out Google's Closure Compiler and Tern.JS for JSDoc static analysis
