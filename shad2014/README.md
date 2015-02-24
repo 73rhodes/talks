@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-Data Visualization Notes
+## Data Visualization Notes
 
 Useful sites
 Government of Canada Open Data - Top 25 Datasets
