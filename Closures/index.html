@@ -82,9 +82,11 @@
                     <h2>The Simplest Closure</h2>
                     <pre><code data-trim contenteditable>
 &nbsp;
-    var x = 1;
-    function bar() {
-      return x;
+    function foo(x) {
+      var y = x;
+      return function () {
+        return y;
+      }
     }
 &nbsp;
                     </code></pre>
