@@ -110,3 +110,7 @@ function doTheThing(importantContext, eventData){
 Downsides to FP
  - Immutable data structures and many functions / closures end up taking up more memory
  - Having pure functions everywhere can be less efficient due to context switching
+
+Resources
+---------
+http://reactivex.io/learnrx/
