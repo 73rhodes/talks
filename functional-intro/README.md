@@ -3,15 +3,15 @@
   * Darren DeRidder @73rhodes
   * Georgey Shibaev @rangermauve
 
-### Intro
+## Intro
 
-#### What is FP?
+### What is FP?
 
   * Programming with functions.
   * Building more complex behavior from simple functions.
   * Separating state from behavior.
 
-#### Benefits
+### Benefits
   * Simpler, shorter code
   * Easier to test
   * Easier to support concurrency
@@ -47,14 +47,14 @@
   - Creates dependencies between things.
   - Grouping state and behaviour together in objects makes it very hard to know the overall program state at any given time.
 
-### Definitions
+## Definitions
 
-#### First class function
+### First class function
  - Functions that can be created and passed around just like any other type
  - `var a = function(x){ return x;};`
  - Allows you to pass bits of code around and compose simple functions to create more complex functionality
  
-#### Pure function
+### Pure function
  - Functions that don't mutate any state
  - Return a new piece of data from their arguments with out modifying existing data
  - Always returns the same value when given the same arguments
@@ -80,7 +80,7 @@ add(1, 1); // 2
 add(1, 1); // 2
 ```
 
-Referential transparency
+### Referential transparency
  - Functions calls that can be replaced by their result without affecting the program
  - Allows for optimizations where entire call stacks get replaced with just the result
 
@@ -97,12 +97,13 @@ var value = fib(13);
 var value = 233;
 ```
 
-## Immutability
+### Immutability
 
-## Higher order function
+### Higher order function
  - function that takes another function as an argument
 
-## Compare OO / imperative vs FP / declarative
+
+## Examples: Compare OO / imperative vs FP / declarative
 
  - list iteration example
 
@@ -111,10 +112,10 @@ var value = 233;
  - currying  / partial function applition
  def. show mutating object state vs calling function and getting new object with changed state
 
-Really simple example of an OO vs FP approach to a simple problem (fizz buzz or whatever ... Need to think of a good example)
+ - Really simple example of an OO vs FP approach to a simple problem (fizz buzz or whatever ... Need to think of a good example)
 
-### partial function application (may not be useful)
- - Eliminate the troubles with `this` in callbacks
+ - partial function application (may not be useful)
+  - Eliminate the troubles with `this` in callbacks
 ```js
 
 events.on("something", par(doTheThing, this));
