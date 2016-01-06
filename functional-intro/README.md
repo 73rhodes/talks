@@ -1,10 +1,14 @@
-Intro quick bio 
+# Intro to Functional Programming
 
-purpose of talk 
+  * Darren DeRidder @73rhodes
+  * Georgey Shibaev @rangermauve
 
-What is FP? quick mention of that it has benefits in some cases
+### Intro
 
-quotes on FP
+What is FP?
+quick mention of that it has benefits in some cases
+
+### Quotes on FP
  > You wanted a banana but what you got was a gorilla holding the banana and the entire jungle.
  > - Joe Armstrong
  
@@ -14,7 +18,7 @@ quotes on FP
  > I now see my early attempts to support the classical model in JavaScript as a mistake.
  > - Douglas Crockford
 
-Motivation:
+### Motivation:
  - Why OO sometimes sucks
   - State and functionality mixed together
   - People sometimes focus too much on class hierarchy
@@ -27,18 +31,17 @@ Motivation:
  - concurrent code
   - Not mutagin shared state makes it easier to run things in parallel
 
-Why people sometimes say state is evil
+### Why people sometimes say state is evil
  - Harder to reason about if it changes by reference
 
-Definitions
------------
+### Definitions
 
-First class function
+#### First class function
  - Functions that can be created and passed around just like any other type
  - `var a = function(x){ return x;};`
  - Allows you to pass bits of code around and compose simple functions to create more complex functionality
  
-Pure function
+#### Pure function
  - Functions that don't mutate any state
  - Return a new piece of data from their arguments with out modifying existing data
  - Always returns the same value when given the same arguments
@@ -81,12 +84,12 @@ var value = fib(13);
 var value = 233;
 ```
 
-Immutability
+## Immutability
 
-Higher order function
+## Higher order function
  - function that takes another function as an argument
 
-Compare OO vs FP
+## Compare OO vs FP
  - list iteration
  - memoization
  - currying  / partial function applition
@@ -94,10 +97,9 @@ Compare OO vs FP
 
 Really simple example of an OO vs FP approach to a simple problem (fizz buzz or whatever ... Need to think of a good example)
 
-more exmamples
---------------
+## more exmamples
 
-partial function application (may not be useful)
+### partial function application (may not be useful)
  - Eliminate the troubles with `this` in callbacks
 ```js
 
@@ -109,12 +111,12 @@ function doTheThing(importantContext, eventData){
 
 ```
 
-Downsides to FP
+## Downsides to FP
  - Immutable data structures and many functions / closures end up taking up more memory
  - Having pure functions everywhere can be less efficient due to context switching
 
-Resources
----------
+## Resources
+
 [Professor Frisby's Mostly Adequate Gide to Functional Programming](https://github.com/MostlyAdequate/mostly-adequate-guide)
 
 http://reactivex.io/learnrx/
