@@ -5,10 +5,20 @@
 
 ### Intro
 
-What is FP?
-quick mention of that it has benefits in some cases
+#### What is FP?
 
-### Quotes on FP
+  * Programming with functions.
+  * Building more complex behavior from simple functions.
+  * Separating state from behavior.
+
+#### Benefits
+  * Simpler, shorter code
+  * Easier to test
+  * Easier to support concurrency
+  * Composable functions - building blocks for programs
+
+### Quotes on OO vs. FP
+
  > I think the lack of reusability comes in object-oriented languages, not functional languages. Because the problem with object-oriented languages is they’ve got all this implicit environment that they carry around with them. You wanted a banana but what you got was a gorilla holding the banana and the entire jungle.
  > - Joe Armstrong
  
@@ -18,21 +28,24 @@ quick mention of that it has benefits in some cases
  > I now see my early attempts to support the classical model in JavaScript as a mistake.
  > - Douglas Crockford
 
-### Motivation:
- - Why OO sometimes sucks
-  - State and functionality mixed together
-  - People sometimes focus too much on class hierarchy
-  - Calling a method might change state somewhere unexpected
- - fewer race cond / state mismatches
-  - Flow is more obvious from function composition
-  - Code gets mutaed in few places
- - simpler code, less code?
-  - Function composition makes reuse your first consideration
- - concurrent code
-  - Not mutagin shared state makes it easier to run things in parallel
+## Motivation:
 
-### Why people sometimes say state is evil
- - Harder to reason about if it changes by reference
+ - Why OO sometimes sucks
+  - State and functionality are mixed together.
+  - People sometimes focus too much on class hierarchy.
+  - Calling a method might change state somewhere unexpected.
+  - Unexpected state somewhere may break your method.
+ - Fewer race conditions / state mismatches.
+  - Program flow is more obvious from function composition.
+  - State gets mutated in few places.
+ - Simpler code, less code.
+  - Function composition makes reuse your first consideration
+ - Concurrent code.
+  - Not mutaging shared state makes it easier to run things in parallel
+ - Why do people sometimes say state is evil?
+  - Harder to reason about if it changes by reference.
+  - Creates dependencies between things.
+  - Grouping state and behaviour together in objects makes it very hard to know the overall program state at any given time.
 
 ### Definitions
 
@@ -89,15 +102,16 @@ var value = 233;
 ## Higher order function
  - function that takes another function as an argument
 
-## Compare OO vs FP
- - list iteration
+## Compare OO / imperative vs FP / declarative
+
+ - list iteration example
+
  - memoization
+
  - currying  / partial function applition
  def. show mutating object state vs calling function and getting new object with changed state
 
 Really simple example of an OO vs FP approach to a simple problem (fizz buzz or whatever ... Need to think of a good example)
-
-## more exmamples
 
 ### partial function application (may not be useful)
  - Eliminate the troubles with `this` in callbacks
