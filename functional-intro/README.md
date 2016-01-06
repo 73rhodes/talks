@@ -9,10 +9,10 @@ What is FP?
 quick mention of that it has benefits in some cases
 
 ### Quotes on FP
- > You wanted a banana but what you got was a gorilla holding the banana and the entire jungle.
+ > I think the lack of reusability comes in object-oriented languages, not functional languages. Because the problem with object-oriented languages is they’ve got all this implicit environment that they carry around with them. You wanted a banana but what you got was a gorilla holding the banana and the entire jungle.
  > - Joe Armstrong
  
- > If you're creating ctor functions and calling new on them, you don't know javascript
+ > If you're creating constructor functions and calling new on them, you don't know javascript.
  >  - Eric Elliot
  
  > I now see my early attempts to support the classical model in JavaScript as a mistake.
