@@ -115,4 +115,6 @@ Downsides to FP
 
 Resources
 ---------
+[Professor Frisby's Mostly Adequate Gide to Functional Programming](https://github.com/MostlyAdequate/mostly-adequate-guide)
+
 http://reactivex.io/learnrx/
