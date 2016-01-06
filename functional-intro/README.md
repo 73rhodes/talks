@@ -8,9 +8,11 @@ quotes on FP
  > You wanted a banana but what you got was a gorilla holding the banana and the entire jungle.
  > - Joe Armstrong
  
- 
  > If you're creating ctor functions and calling new on them, you don't know javascript
  >  - Eric Elliot
+ 
+ > I now see my early attempts to support the classical model in JavaScript as a mistake.
+ > - Douglas Crockford
 
 Motivation:
  - Why OO sometimes sucks
