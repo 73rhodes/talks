@@ -11,11 +11,10 @@
   * Building more complex behavior from simple functions.
   * Separating state from behavior.
 
-### Benefits
-  * Simpler, shorter code
-  * Easier to test
-  * Easier to support concurrency
-  * Composable functions - building blocks for programs
+
+### Functional JavaScript
+ - Note that JS *is* a functional language
+ - (always has been, started out as "Lisp in the browser"
 
 ### Quotes on OO vs. FP
 
@@ -28,8 +27,15 @@
  > I now see my early attempts to support the classical model in JavaScript as a mistake.
  > - Douglas Crockford
 
-## Motivation:
+### Why Functional Programming?
 
+#### Benefits
+ - Simpler code, less code.
+  - Function composition makes reuse your first consideration
+ - Easier to test
+ - Easier to support concurrency
+  - Not mutating shared state makes it easier to run things in parallel
+ - Composable functions - building blocks for programs
  - Why OO sometimes sucks
   - State and functionality are mixed together.
   - People sometimes focus too much on class hierarchy.
@@ -38,10 +44,6 @@
  - Fewer race conditions / state mismatches.
   - Program flow is more obvious from function composition.
   - State gets mutated in few places.
- - Simpler code, less code.
-  - Function composition makes reuse your first consideration
- - Concurrent code.
-  - Not mutaging shared state makes it easier to run things in parallel
  - Why do people sometimes say state is evil?
   - Harder to reason about if it changes by reference.
   - Creates dependencies between things.
