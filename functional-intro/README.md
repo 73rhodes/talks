@@ -1,67 +1,74 @@
 # Intro to Functional Programming
 
-  * Darren DeRidder @73rhodes
-  * Georgey Shibaev @rangermauve
+ - Darren DeRidder @73rhodes
+ - Georgey Shibaev rangermauve
 
 ## Intro
 
 ### What is FP?
 
-  * Programming with functions.
-  * Building more complex behavior from simple functions.
-  * Separating state from behavior.
-
+ - Programming with functions.
+ - Building more complex behavior from simple functions.
+ - Separating state from behavior.
 
 ### Functional JavaScript
- - Note that JS *is* a functional language
- - (always has been, started out as "Lisp in the browser"
 
-### Quotes on OO vs. FP
+ - Note that JS is a functional language.
+ - Started out as Lisp in the browser.
 
- > I think the lack of reusability comes in object-oriented languages, not functional languages. Because the problem with object-oriented languages is they’ve got all this implicit environment that they carry around with them. You wanted a banana but what you got was a gorilla holding the banana and the entire jungle.
- > - Joe Armstrong
+### Quotes on OO and FP.
+
+ - I think the lack of reusability comes in object-oriented languages, not functional languages. Because the problem with object-oriented languages is they’ve got all this implicit environment that they carry around with them. You wanted a banana but what you got was a gorilla holding the banana and the entire jungle.
+
+ - Joe Armstrong
  
- > If you're creating constructor functions and calling new on them, you don't know javascript.
- >  - Eric Elliot
+ - If you're creating constructor functions and calling new on them, you don't know javascript.
+ - Eric Elliot
  
- > I now see my early attempts to support the classical model in JavaScript as a mistake.
- > - Douglas Crockford
+ - I now see my early attempts to support the classical model in JavaScript as a mistake.
+ - Douglas Crockford
 
 ### Why Functional Programming?
 
 #### Benefits
+
  - Simpler code, less code.
-  - Function composition makes reuse your first consideration
+ - Function composition makes reuse your first consideration.
  - Easier to test
  - Easier to support concurrency
-  - Not mutating shared state makes it easier to run things in parallel
+ - Not mutating shared state makes it easier to run things in parallel
  - Composable functions - building blocks for programs
- - Why OO sometimes sucks
-  - State and functionality are mixed together.
-  - People sometimes focus too much on class hierarchy.
-  - Calling a method might change state somewhere unexpected.
-  - Unexpected state somewhere may break your method.
+
  - Fewer race conditions / state mismatches.
-  - Program flow is more obvious from function composition.
-  - State gets mutated in few places.
- - Why do people sometimes say state is evil?
-  - Harder to reason about if it changes by reference.
-  - Creates dependencies between things.
-  - Grouping state and behaviour together in objects makes it very hard to know the overall program state at any given time.
+ - Program flow is more obvious from function composition.
+ - State gets mutated in few places.
+
+####  Why OO sometimes sucks
+ - State and functionality are mixed together.
+ - People sometimes focus too much on class hierarchy.
+ - Calling a method might change state somewhere unexpected.
+ - Unexpected state somewhere may break your method.
+
+#### Why do people sometimes say state is evil?
+ - Harder to reason about if it changes by reference.
+ - Creates dependencies between things.
+ - Grouping state and behaviour together in objects makes it very hard to know the overall program state at any given time.
 
 ## Definitions
 
 ### First class function
  - Functions that can be created and passed around just like any other type
- - `var a = function(x){ return x;};`
+
+   `var a = function(x){ return x;};`
+
  - Allows you to pass bits of code around and compose simple functions to create more complex functionality
  
 ### Pure function
  - Functions that don't mutate any state
  - Return a new piece of data from their arguments with out modifying existing data
  - Always returns the same value when given the same arguments
-``` js
-// Not pure
+
+`// Not pure
 var count = 0;
 function increment(amount){
 count += amount || 0;
@@ -70,7 +77,7 @@ return count;
 
 increment(1); // 1
 increment(1); // 2
-```
+`
 
 ``` js
 // Pure
