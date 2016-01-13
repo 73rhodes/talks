@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>Intro to Functional Programming</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/white.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section data-markdown>
+          <script type="text/template">
+          ### Intro to Functional Programming
+
+          [@rangermauve](http://twitter.com/rangermauve) / [@73rhodes](http://twitter.com/73rhodes)
+          </script>
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+          ## Functional Programming
+
+          - What it is
+          - Why you should care
+          - Quotes
+          - Terms
+          - Examples
+          </script>
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+          ### What is Functional Programming?
+
+          - Programming with functions.
+          - Building more complex behavior from simple functions.
+          - Separating state from behavior.
+          </script>
+        </section>
+
+        <section>
+          <h4>Functional Programming in Javascript?</h3>
+          <ul>
+          <li>anonymous functions with closures
+          <li>first-class functions</li>
+          <li>native map, reduce, filter,...</li>
+        </section>
+
+        <section>
+          <section>
+            <h2>Quotes</h2>
+          </section>
+          <section>
+            <blockquote>
+            &ldquo;<small>I think the lack of reusability comes in object-oriented
+            languages, not functional languages. Because the problem with
+            object-oriented languages is they’ve got all this implicit
+            environment that they carry around with them...</small> You wanted a
+            banana but what you got was a gorilla holding the banana and the
+            entire jungle.&rdquo;
+            <br/><small>- Joel Armstrong</small>
+            </blockquote>
+          </section>
+          <section>
+            <blockquote>
+            &ldquo;If you're creating constructor functions and calling
+            new on them, you don't know javascript.&rdquo;
+            - Eric Elliot
+            </blockquote>
+          </section>
+          <section>
+            <blockquote>
+            &ldquo;I now see my early attempts to support the classical
+            model in JavaScript as a mistake.&rdquo; - Douglas Crockford
+            </blockquote>
+          </section>
+          <section>
+            <blockquote>
+            &ldquo;OO is the roman numerals of computing&rdquo; - Rob Pike
+            </blockquote>
+          </section>
+        </section>
+
+        <section>
+        <section data-markdown>
+          <script type="text/template">
+            ## Benefits of FP
+
+            - Simpler code, less code.
+            - Easier to test.
+            - Composable functions - building blocks for programs.
+          </script>
+        </section>
+        <section data-markdown>
+          <script type="text/template">
+            - Easier to support concurrency.
+            - Fewer race conditions / state mismatches.
+            - Program flow is more obvious from function composition.
+            - State gets mutated in fewer places.
+          </script>
+        </section>
+        </section>
+
+        <section>
+          <section>
+            <h4>Object Oriented Programming</h4>
+            <p>bundles state and logic together</p>
+            <img style="border: 0;" src="fpjs.001.png">
+          </section>
+          <section>
+            <p>state in lots of places</p>
+            <img style="border: 0;" src="fpjs.002.png">
+          </section>
+          <section>
+            <p>dependencies</p>
+            <img style="border: 0;" src="fpjs.003.png">
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h4>FunctionalProgramming</h4>
+            <p>separates state and logic</p>
+            <img style="border: 0;" src="fpjs.004.png">
+          </section>
+          <section>
+            <ul>
+            <li>higher order functions
+            <li>state in one place</li>
+            </ul>
+            <img style="border: 0;" src="fpjs.005.png">
+          </section>
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+          ### Drawbacks of OO
+          - State and functionality are mixed together.
+          - Sometimes too much focus on class hierarchy.
+          - Calling a method may change state somewhere unexpected.
+          - Unexpected state changes may break your method.
+          </script>
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+          ### Why avoid state?
+          - Harder to reason about if it changes by reference.
+          - Creates depenencies.
+          - Makes it hard to know the overall program state at any given time.
+          </script>
+        </section>
+
+
+      <section>
+        <section data-markdown>
+          <script type="text/template">
+          ## Definitions
+          </script>
+        </section>
+        <section data-markdown>
+          <script type="text/template">
+          ### First class functions
+          - Functions that can be defined and passed around like any other variable
+          - Pass bits of logic around and compose simple functions to make complex ones
+
+          ```javascript
+            function adder(amount){
+              return function(x){
+                return x + amount;
+              };
+            }
+
+            var addOne = adder(1);
+
+            [1,2,3,4].map(addOne);
+            // [2, 3, 4, 5]
+          ```
+
+          </script>
+        </section>
+        <section data-markdown>
+          <script type="text/template">
+          ### Pure function
+          - A function that doesn't mutate any state (no "side effects")
+          - Always returns the same output given the same input
+          ``` javascript
+            // Not pure
+            var count = 0;
+            function increment(amount){
+              return count += amount;
+            }
+            increment(1); // 1
+            increment(1); // 2
+
+            // Pure
+            function add(a, b){
+             return a + b;
+            }
+            add(1, 1); // 2
+            add(1, 1); // 2
+          ```
+          </script>
+        </section>
+        <section data-markdown>
+          <script type="text/template">
+          ### Referential transparency
+          - Functions calls that can be replaced by their result without affecting the program
+          - Entire call stacks can get replaced with just the result
+
+          ``` js
+          function fib(n){
+            if(n <= 1) return 1;
+            return fib(n -1) + fib(n - 2);
+          }
+
+          // Heavy computation
+          var value = fib(13);
+
+          // Replacement can be done at compile time
+          var value = 233;
+          ```
+
+          </script>
+        </section>
+        <section data-markdown>
+          <script type="text/template">
+          ### Immutability
+          - Data types that cannot modify their value
+          - Instead of modifying an existing value, create a new one
+
+          ```javascript
+          // Creates a new, flufflier cat
+          function fluff(somecat){
+            return Object.assign({}, somecat,{
+              cuteness: somecat.cuteness + 1,
+              fluffy: true
+            });
+          }
+
+          var cuteCat = {cuteness: 2};
+          // Make this cat immutable
+          Object.seal(cuteCat);
+          var cuterCat = fluff(cuteCat);
+          cuteCat.cuteness !== cuterCat.cuteness;
+          ```
+          </script>
+        </section>
+        <section data-markdown>
+          <script type="text/template">
+          ### Higher order function
+          - A function that takes another function as an argument
+
+          ```javascript
+          function map(fn){
+            return function(array){
+              var length = array.length;
+              var result = new Array(length);
+
+              for(var i = 0; i < length; i++)
+                result[i] = fn(array[i]);
+
+              return result;
+            }
+          }
+
+          var addOneToAll = map(addOne);
+
+          addOneToAll([1,2,3,4]); // [2,3,4,5]
+          ```
+          </script>
+        </section>
+      </section>
+
+        <section>
+          <section data-markdown>
+            <script type="text/template">
+            ## Example: list iteration
+            ```javascript
+            // Imperative
+            var array = [1,2,3,4];
+            var result = [];
+            for(var i = 0; i < array.length; i++){
+              var value = array[i];
+              result[i] = value + 1;
+            }
+
+            // Functional
+            var result = array.map(function(value){
+              return value + 1;
+            });
+            ```
+            </script>
+          </section>
+
+          <section data-markdown>
+            <script type="text/template">
+            ## Example: memoization
+            ```javascript
+            // Cache complex computations
+            function memoize(fn){
+              var cache = {}:
+              return function(){
+                var key = [].join.call(arguments, "-");
+                if(key in cache) return cache[key];
+                return cache[key] = fn.apply(this, arguments);
+              }
+            }
+
+            var sqrt = memoize(Math.sqrt.bind(Math));
+            sqrt(21337); // Does the computation
+            sqrt(21337); // Uses pre-computed value
+            ```
+            </script>
+          </section>
+
+          <section data-markdown>
+            <script type="text/template">
+            ### Partial function application
+            ```javascript
+            function partiallyApply(fn){
+              // All but first argument;
+              var args = [].slice.call(arguments, 1);
+              args.unshift[null];
+              return fn.bind.apply(fn, args);
+            }
+
+            function map(fn, array) {}
+
+            function getUserDataPromise(id) {}
+
+            function getFriendIdsPromise() {}
+
+            funtction renderPersonList(targetDom, people) {}
+
+            getFriendIds()
+            .then(map(getUserDataPromise)))
+            .then(Promise.all.bind(Promise))
+            .then(partial(renderPersonList(document.body)));
+            ```
+            </script>
+          </section>
+
+          <section>
+            <h2>Example OO vs FP approach</h2>
+          </section>
+
+          <section data-markdown>
+            <script type="text/template">
+            ### Imperative
+            ```
+var result;
+
+function capWords(input) {
+  var counter;
+  var inputArray = input.split(" ");
+  var transformed = "";
+  result = [];
+  for (counter = 0; counter < inputArray.length; counter++) {
+    transformed = [
+      inputArray[counter].charAt(0).toUpperCase(), 
+      inputArray[counter].substring(1)
+    ].join("");
+    result.push(transformed);
+  }
+};
+
+capWords('hello world!');
+alert(result.join(" "));
+```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+            ### Object Oriented
+            ```
+var SomeText = function(text) {
+  this.text = text;
+};
+
+SomeText.prototype.capify = function(str) {
+  var firstLetter = str.charAt(0);
+  var remainder = str.substring(1);
+  return [firstLetter.toUpperCase(), remainder].join("");
+};
+
+SomeText.prototype.capifyWords = function() {
+  var result = [];
+  var textArray = this.text.split(" ");
+  for (var counter = 0; counter < textArray.length; counter++) {
+    result.push(this.capify(textArray[counter]));
+  }
+  return result.join(" ");
+};
+
+var newText = new SomeText('hello world!');
+alert(newText.capifyWords());
+```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+            ### Functional
+            ```
+var capify = function(str) {
+  return [str.charAt(0).toUpperCase(), str.substring(1)].join("");
+};
+
+var processWords = function(fn, str) {
+  return str.split(" ").map(fn).join(" ");
+};
+
+alert(processWords(capify, 'hello world!'));
+```
+            </script>
+          </section>
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+          ### Downsides to FP
+          - more memory
+          - more context switching
+          - terminology and function composition can take time to get used to
+          ```javascript
+          var userIdsPromise = getUsers().then(map(pluck("id")));
+          ```
+          </script>
+        </section>
+
+
+        <section data-markdown>
+          <script type="text/template">
+          ### Resources
+
+           - [Mostly Adequate Guide to Functional Programming](https://github.com/MostlyAdequate/mostly-adequate-guide)
+           - [reactivex.io](http://reactivex.io/learnrx/)
+           - [Sitepoint: Intro to Functional Programming](http://www.sitepoint.com/introduction-functional-javascript/)
+          </script>
+        </section>
+
+        <section>
+          <h3>thanks!</h3>
+        </section>
+
+      </div>
+
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/zoom-js/zoom.js', async: true },
+          { src: 'plugin/notes/notes.js', async: true }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
