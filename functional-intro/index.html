@@ -371,18 +371,77 @@
             </script>
           </section>
 
-
-          <section data-markdown>
-            <script type="text/template">
-            ### Example currying, partial function application
-            show mutating object state vs calling function and getting new
-            object with changed state
-            </script>
+          <section>
+            <h2>Example OO vs FP approach</h2>
           </section>
 
           <section data-markdown>
             <script type="text/template">
-            ### Example OO vs FP approach
+            ### Imperative
+            ```
+var result;
+
+function capWords(input) {
+  var counter;
+  var inputArray = input.split(" ");
+  var transformed = "";
+  result = [];
+  for (counter = 0; counter < inputArray.length; counter++) {
+    transformed = [
+      inputArray[counter].charAt(0).toUpperCase(), 
+      inputArray[counter].substring(1)
+    ].join("");
+    result.push(transformed);
+  }
+};
+
+capWords('hello world!');
+alert(result.join(" "));
+```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+            ### Object Oriented
+            ```
+var SomeText = function(text) {
+  this.text = text;
+};
+
+SomeText.prototype.capify = function(str) {
+  var firstLetter = str.charAt(0);
+  var remainder = str.substring(1);
+  return [firstLetter.toUpperCase(), remainder].join("");
+};
+
+SomeText.prototype.capifyWords = function() {
+  var result = [];
+  var textArray = this.text.split(" ");
+  for (var counter = 0; counter < textArray.length; counter++) {
+    result.push(this.capify(textArray[counter]));
+  }
+  return result.join(" ");
+};
+
+var newText = new SomeText('hello world!');
+alert(newText.capifyWords());
+```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+            ### Functional
+            ```
+var capify = function(str) {
+  return [str.charAt(0).toUpperCase(), str.substring(1)].join("");
+};
+
+var processWords = function(fn, str) {
+  return str.split(" ").map(fn).join(" ");
+};
+
+alert(processWords(capify, 'hello world!'));
+```
             </script>
           </section>
         </section>
