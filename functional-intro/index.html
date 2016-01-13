@@ -40,7 +40,7 @@
         <section data-markdown>
           <script type="text/template">
           ### Intro to Functional Programming
-          
+
           [@rangermauve](http://twitter.com/rangermauve) / [@73rhodes](http://twitter.com/73rhodes)
           </script>
         </section>
@@ -105,7 +105,7 @@
             </blockquote>
           </section>
         </section>
-        
+
         <section>
         <section data-markdown>
           <script type="text/template">
@@ -164,7 +164,7 @@
           - Sometimes too much focus on class hierarchy.
           - Calling a method may change state somewhere unexpected.
           - Unexpected state changes may break your method.
-          </script> 
+          </script>
         </section>
 
         <section data-markdown>
@@ -173,45 +173,132 @@
           - Harder to reason about if it changes by reference.
           - Creates depenencies.
           - Makes it hard to know the overall program state at any given time.
-          </script> 
+          </script>
         </section>
 
- 
+
       <section>
         <section data-markdown>
           <script type="text/template">
-          ## Definitions 
-          </script> 
+          ## Definitions
+          </script>
         </section>
         <section data-markdown>
           <script type="text/template">
           ### First class functions
-          </script> 
+          - Functions that can be defined and passed around like any other variable
+          - Pass bits of logic around and compose simple functions to make complex ones
+
+          ```javascript
+            function adder(amount){
+              return function(x){
+                return x + amount;
+              };
+            }
+
+            var addOne = adder(1);
+
+            [1,2,3,4].map(addOne);
+            // [2, 3, 4, 5]
+          ```
+
+          </script>
         </section>
         <section data-markdown>
           <script type="text/template">
           ### Pure function
-          </script> 
+          - A function that doesn't mutate any state (no "side effects")
+          - Always returns the same output given the same input
+          ``` javascript
+            // Not pure
+            var count = 0;
+            function increment(amount){
+              return count += amount;
+            }
+            increment(1); // 1
+            increment(1); // 2
+
+            // Pure
+            function add(a, b){
+             return a + b;
+            }
+            add(1, 1); // 2
+            add(1, 1); // 2
+          ```
+          </script>
         </section>
         <section data-markdown>
           <script type="text/template">
           ### Referential transparency
-          </script> 
+          - Functions calls that can be replaced by their result without affecting the program
+          - Entire call stacks can get replaced with just the result
+
+          ``` js
+          function fib(n){
+            if(n <= 1) return 1;
+            return fib(n -1) + fib(n - 2);
+          }
+
+          // Heavy computation
+          var value = fib(13);
+
+          // Replacement can be done at compile time
+          var value = 233;
+          ```
+
+          </script>
         </section>
         <section data-markdown>
           <script type="text/template">
           ### Immutability
-          </script> 
+          - Data types that cannot modify their value
+          - Instead of modifying an existing value, create a new one
+
+          ```javascript
+          // Creates a new, flufflier cat
+          function fluff(somecat){
+            return Object.assign({}, somecat,{
+              cuteness: somecat.cuteness + 1,
+              fluffy: true
+            });
+          }
+
+          var cuteCat = {cuteness: 2};
+          // Make this cat immutable
+          Object.seal(cuteCat);
+          var cuterCat = fluff(cuteCat);
+          cuteCat.cuteness !== cuterCat.cuteness;
+          ```
+          </script>
         </section>
         <section data-markdown>
           <script type="text/template">
           ### Horizontal dependency
-          </script> 
+          </script>
         </section>
         <section data-markdown>
           <script type="text/template">
           ### Higher order function
-          </script> 
+          - A function that takes another function as an argument
+
+          ```javascript
+          function map(fn){
+            return function(array){
+              var length = array.length;
+              var result = new Array(length);
+
+              for(var i = 0; i < length; i++)
+                result[i] = fn(array[i]);
+
+              return result;
+            }
+          }
+
+          var addOneToAll = map(addOne);
+
+          addOneToAll([1,2,3,4]); // [2,3,4,5]
+          ```
+          </script>
         </section>
       </section>
 
@@ -219,27 +306,143 @@
           <section data-markdown>
             <script type="text/template">
             ## Example: list iteration
-            - tbd
-            </script> 
+            ```javascript
+            // Imperative
+            var array = [1,2,3,4];
+            var result = [];
+            for(var i = 0; i < array.length; i++){
+              var value = array[i];
+              result[i] = value + 1;
+            }
+
+            // Functional
+            var result = array.map(function(value){
+              return value + 1;
+            });
+            ```
+            </script>
           </section>
 
           <section data-markdown>
             <script type="text/template">
             ## Example: memoization
-            </script> 
+            ```javascript
+            // Cache complex computations
+            function memoize(fn){
+              var cache = {}:
+              return function(){
+                var key = [].join.call(arguments, "-");
+                if(key in cache) return cache[key];
+                return cache[key] = fn.apply(this, arguments);
+              }
+            }
+
+            var sqrt = memoize(Math.sqrt.bind(Math));
+            sqrt(21337); // Does the computation
+            sqrt(21337); // Uses pre-computed value
+            ```
+            </script>
           </section>
 
           <section data-markdown>
             <script type="text/template">
-            ### Example currying, partial function application 
-            show mutating object state vs calling function and getting new
-            object with changed state
-            </script> 
+            ### Partial function application
+            ```javascript
+            function partiallyApply(fn){
+              // All but first argument;
+              var args = [].slice.call(arguments, 1);
+              args.unshift[null];
+              return fn.bind.apply(fn, args);
+            }
+
+            function map(fn, array) {}
+
+            function getUserDataPromise(id) {}
+
+            function getFriendIdsPromise() {}
+
+            funtction renderPersonList(targetDom, people) {}
+
+            getFriendIds()
+            .then(map(getUserDataPromise)))
+            .then(Promise.all.bind(Promise))
+            .then(partial(renderPersonList(document.body)));
+            ```
+            </script>
+          </section>
+
+          <section>
+            <h2>Example OO vs FP approach</h2>
+          </section>
+
+          <section data-markdown>
+            <script type="text/template">
+            ### Imperative
+            ```
+var result;
+
+function capWords(input) {
+  var counter;
+  var inputArray = input.split(" ");
+  var transformed = "";
+  result = [];
+  for (counter = 0; counter < inputArray.length; counter++) {
+    transformed = [
+      inputArray[counter].charAt(0).toUpperCase(), 
+      inputArray[counter].substring(1)
+    ].join("");
+    result.push(transformed);
+  }
+};
+
+capWords('hello world!');
+alert(result.join(" "));
+```
+            </script>
           </section>
           <section data-markdown>
             <script type="text/template">
-            ### Example OO vs FP approach
-            </script> 
+            ### Object Oriented
+            ```
+var SomeText = function(text) {
+  this.text = text;
+};
+
+SomeText.prototype.capify = function(str) {
+  var firstLetter = str.charAt(0);
+  var remainder = str.substring(1);
+  return [firstLetter.toUpperCase(), remainder].join("");
+};
+
+SomeText.prototype.capifyWords = function() {
+  var result = [];
+  var textArray = this.text.split(" ");
+  for (var counter = 0; counter < textArray.length; counter++) {
+    result.push(this.capify(textArray[counter]));
+  }
+  return result.join(" ");
+};
+
+var newText = new SomeText('hello world!');
+alert(newText.capifyWords());
+```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+            ### Functional
+            ```
+var capify = function(str) {
+  return [str.charAt(0).toUpperCase(), str.substring(1)].join("");
+};
+
+var processWords = function(fn, str) {
+  return str.split(" ").map(fn).join(" ");
+};
+
+alert(processWords(capify, 'hello world!'));
+```
+            </script>
           </section>
         </section>
 
@@ -248,17 +451,21 @@
           ### Downsides to FP
           - more memory
           - more context switching
-          </script> 
+          - terminology and function composition can take time to get used to
+          ```javascript
+          var userIdsPromise = getUsers().then(map(pluck("id")));
+          ```
+          </script>
         </section>
 
-       
+
         <section data-markdown>
           <script type="text/template">
           ### Resources
- 
+
            - [Mostly Adequate Guide to Functional Programming](https://github.com/MostlyAdequate/mostly-adequate-guide)
            - [reactivex.io](http://reactivex.io/learnrx/)
-          </script> 
+          </script>
         </section>
 
         <section>
