@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>Getting Started with JS</title>
+
+    <meta name="description" content="Tools and Resources for new JavaScript developers">
+    <meta name="author" content="Darren DeRidder">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="stylesheet" href="css/reveal.min.css">
+    <link rel="stylesheet" href="css/theme/solarized.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- If the query includes 'print-pdf', include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+      }
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+        <section>
+          <h1>Getting Started</h1>
+          <h3>with Javascript</h3>
+        </section>
+
+        <section>
+          <h2>About Me</h2>
+          <p>
+            <small><a href="http://about.me/drderidder">Darren DeRidder</a> / <a href="http://twitter.com/73rhodes">@73rhodes</a></small><br/>
+            Metrics Technologies - cloud-based EDA startup<br>
+            Real-time AAA systems, telecom, Network &amp; Mobile Security<br>
+            Mobile World Congress<br/>
+            Blackhat Security Conference<br>
+            Ottawa JavaScript<br>
+          </p>
+        </section>
+
+        <section>
+            <h3>javascript everywhere</h3>
+            <ul>
+              <li>Web applications (browser &amp; server side)</li>
+              <li>Mobile apps</li>
+              <li>Web services</li>
+              <li>Desktop apps</li>
+              <li>Scripts and utilities</li>
+              <li>Extension frameworks</li>
+            </ul>
+        </section>
+
+        <section>
+          <h2>Learning</h2>
+          <ul>
+            <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/A_re-introduction_to_JavaScript">A re-introduction to JavaScript (MDN)</a></li>
+            <li><a href="https://eloquentjavascript.net/">Eloquent JavaScript (Book)</a></li>
+            <li><a href="https://www.codecademy.com/learn/introduction-to-javascript">Codecademy JavaScript (Tutorial)</a></li>
+            <li><a href="https://nodeschool.io/">Nodeschool</a></li>
+            <li><a href="http://73rhodes.github.io/talks/ModulePatterns/#/">NodeJS Module Patterns (me!)</a></li>
+            <li><a href="https://www.smashingmagazine.com/2018/01/understanding-using-rest-api/">Using REST</a></li>
+          </ul>
+        </section>
+ 
+        <section>
+            <h2>Tools - the Basics</h2>
+            <ul>
+              <li>OS X, *nix, (VirtualBox, Docker)</li>
+              <li><a href="http://nodejs.org">Node and NPM</a></li>
+              <li><a href="https://www.google.ca/chrome/">Google Chrome</a></li>
+        </section>
+
+        <section>
+          <h2>Tools - Code Repos</h2>
+          <ul>
+          <li><a href="http://github.com">github</a></li>
+          <li><a href="http://gitlab.com">gitlab</a></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Tools - Text Editor Wars!</h2> 
+            <ul>
+              <li>
+                <a href="https://code.visualstudio.com/">VS Code</a>,
+                <a href="https://atom.io/">Atom</a>,
+                <a href="https://www.sublimetext.com/">SublimeText</a></li>
+              <li><a href="https://www.vim.org/">vim</a></li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Tools - Lint All The Things!</h3>
+            <div>
+              <ul>
+                <li><a href="https://eslint.org/">eslint</a> / 
+                  <a href="http://jshint.com/">jshint</a> / 
+                  <a href="http://jslint.com">jslint</a></li>
+                <li>where to use: editor, npm*, build pipeline</li>              
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>Tools - Code quality</h2>
+            <a href="https://github.com/es-analysis/plato">Plato</a>
+            <br/>
+            <a href="http://ternjs.net">Tern</a>
+          </section>
+
+          <section>
+            <h2>Tools - Debugging</h2>
+            <ul>
+              <li><a href="https://developers.google.com/web/tools/chrome-devtools/">chrome dev tools</a></li>
+              <li><a href="https://nodejs.org/en/docs/guides/debugging-getting-started/">node --inspect</a></li>
+              <li><a href="https://www.getpostman.com/">postman</a></li>   
+            </ul>
+          </section>
+
+          <section>
+            <h2>Back-end</h2>
+            <a href="http://expressjs.com">Express</a>
+          </section>
+
+          <section>
+            <h2>Front-end</h2>
+            <ul>
+              <li><a href="https://knockoutjs.com/">Knockout</a></li>
+              <li><a href="https://vuejs.org/">Vue</a></li>
+              <li><a href="https://reactjs.org/">React</a></li>
+              <li>See also: <a href="http://todomvc.com/">TodoMVC</a></li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Native apps</h2>
+            <ul>
+              <li>Desktop - <a href="https://electronjs.org/">Electron</a></li>
+              <li>Mobile - <a href="https://cordova.apache.org/">Apache Cordova</a></li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Unit testing</h2>
+            <ul>
+              <li>
+                  <a href="http://mochajs.org">Mocha (demo with toml)</a>
+              </li>
+              <li>
+                  <a href="https://istanbul.js.org/">Istanbul</a>
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>CSS</h2>
+            <a href="http://getbootstrap.com">bootstrap</a>
+          </section>
+
+          <section>
+            <h2>Processes</h2>
+            <ul>
+              <li>test & lint up-front, and in your build pipeline</li>
+              <li>build & test on every commit to the repo</li>
+              <li>measure code coverage, aim for > 80% but not 100%</li>
+              <li>API-first development</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>MOAR!</h2>
+            <ul>
+              <li><a href="http://microjs.com/#">microjs</a></li>
+              <li><a href="http://pixelscommander.com/javascript/nasa-coding-standarts-for-javascript-performance/">
+                NASA Coding Standards (applied to JavaScript)</a></li>
+            </ul>
+          </section>
+
+      </div>
+
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.min.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+        // parallaxBackgroundSize: '2100px 900px',
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+          { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
