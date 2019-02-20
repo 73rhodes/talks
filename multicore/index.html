@@ -1,0 +1,307 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/sky.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<p>Scaling</p>
+					<h2>CPU-Intensive</h2>
+					<p>Node Apps</p>
+				</section>
+				<section>
+					<p>Darren DeRidder</p>
+					<p>@73rhodes</p>
+				</section>
+				<section>
+					<h2>
+						Is <code>node</code> fast?
+					</h2>
+					<span class="fragment">it depends...</span>
+					<aside class="notes">
+						<ul>
+						  <li>Many cases (web servers) very fast.</li>
+						  <li>CPU intensive - not as fast.</li>
+							<li>The 10k problem</li>
+							<li>Node's thread pool</li>
+							<li>IO-bound apps</li>
+							<li>CPU-bound apps</li>
+						</ul>
+					</aside>
+				</section>
+				<section>
+					<img src="./evented.png"/>
+					<p>
+					Simon Willison, "Evented I/O based web servers, explained using bunnies"
+				  </p>
+					<aside class="notes">
+						<ul>
+							<li>The 10k problem</li>
+							<li>Node's event-loop and thread pool</li>
+						</ul>
+					</aside>
+				</section>
+				<section>
+					<h3>Some terms</h3>
+					<ul>
+							<li class="fragment fade-in-then-semi-out">multi-core / multi-cpu system / hyperthreading</li>
+							<li class="fragment fade-in-then-semi-out">single-threaded, multi-process, multi-threaded</li>
+							<li class="fragment fade-in-then-semi-out">CPU-bound vs. I/O-bound apps</li>
+					</ul>
+				</section>
+				<section>
+					<table>
+						<thead>
+							<tr>
+								<th>Multi-Threaded</th>
+								<th>Multi-Process</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Single process <sup>*</sup></td>
+								<td>Multiple processes</td>
+							</tr>
+							<tr>
+								<td>Threads share same memory space</td>
+								<td>Each process has own memory space</td>
+							</tr>
+							<tr>
+								<td>Fewer resources</td>
+								<td>More resources</td>
+							</tr>
+						</tbody>
+					</table>
+					<aside class="notes">
+						<li>multi-threaded: share the same memory space, one process, fewer resources.</li>
+						<li>multi-process: more separation, traditionally simpler, more resources</li>
+					</aside>
+				</section>
+				<section>
+					<h2>The <code>cluster</code> Module</h2>
+					<pre><code class="hljs" data-trim contenteditable>
+&nbsp;
+&nbsp; const cluster = require('cluster');
+&nbsp;
+					</code></pre>
+				</section>
+				<section>
+					<pre><code class="hljs javascript" data-trim contenteditable>
+if (cluster.isMaster) {
+    // Master process.
+    // Fork workers.
+    // Handle messages from workers.
+    // Print result when all workers exit.
+    // Allocate work to worker processes.
+    // Finally tell workers to shut down.
+} else {
+    // Worker process.
+    // Handle messages from master process.
+    // Send messages back to master process.
+}
+					</code></pre>
+				</section>
+				<section>
+					<pre><code class="hljs" data-trim contenteditable>
+&nbsp;
+&nbsp; // Fork workers
+&nbsp; const numWorkers = require('os').cpus().length;
+
+&nbsp; for (let i = 0; i < numWorkers; i++) {
+&nbsp; 	cluster.fork();
+&nbsp; }
+&nbsp;
+          </code></pre>
+				</section>
+				<section>
+					<pre><code class="hljs" data-trim contenteditable>
+&nbsp;
+&nbsp; // Master sending messages to workers.
+&nbsp;
+&nbsp; for (var id in cluster.workers) {
+&nbsp;   cluster.workers[id].send('Hello from master');
+&nbsp; }
+&nbsp;
+					</code></pre>
+				</section>
+				<section>
+					<pre><code class="hljs" data-trim contenteditable>
+&nbsp;
+&nbsp; // Master handling events from workers.
+&nbsp;
+&nbsp; cluster.on("message", myMessageHandler);
+&nbsp; cluster.on("error", myErrorHandler);
+&nbsp; cluster.on("exit", myExitHandler);
+&nbsp;
+					</code></pre>
+				</section>
+				<section>
+					<pre><code class="hljs javascript" data-trim contenteditable>
+&nbsp;
+&nbsp; // Worker
+&nbsp;
+&nbsp; process.on("message", (msg) => {
+&nbsp;    console.log(`Got message "${msg}" from master.`);
+&nbsp;    process.send(`Hello from worker ${cluster.worker.id}`);
+&nbsp; });
+&nbsp;
+					</code></pre>
+				</section>
+				<section>
+					<aside class="notes">
+	          <ul>
+							<li>Tell child processes to exit</li>
+							<li>Listen for exit event</li>
+							<li>Check that all workers have exited:</li>
+	          </ul>
+					</aside>
+					<pre><code class="hljs javascript" data-trim contenteditable>
+&nbsp;
+&nbsp; // Shutting down
+&nbsp; Object.keys(cluster.workers).length
+&nbsp;
+				 </code></pre>
+				 </section>
+				 <section>
+          <h3>The <code>worker_threads</code> Module</h3>
+					<pre><code class="hljs javascript" data-trim contenteditable>
+&nbsp;
+&nbsp; const {
+&nbsp; 	Worker,
+&nbsp; 	isMainThread,
+&nbsp; 	parentPort,
+&nbsp; 	workerData,
+&nbsp; 	threadId
+&nbsp; } = require('worker_threads');
+&nbsp;
+					</code></pre>
+					<aside class="notes">
+						<ul>
+							<li>On by default in node 11.9.0 (latest) but otherwise requires --experimental flag.</li>
+	            <li>You tell the thread what file to run with. cluster forks child processes
+	             running the same code as master process but with worker threads you
+	             can spawn threads that start up in any file.<li>
+	            <li>nothing like cluster.workers to make your own Set(), add workers to it,
+	             then for each worker in set attach event handlers.</li>
+	            <li>messaging from workers is via parentPort.postMessage</li>
+	            <li>messaging from main to workers if via worker.postMessage</li>
+						</ul>
+					</aside>
+				</section>
+				<section>
+					<pre><code class="hljs javascript" data-trim contenteditable>
+&nbsp;
+&nbsp; if (isMainThread) {
+&nbsp;     // Master thread.
+&nbsp;     // Spawn worker threads.
+&nbsp;     // Set up message handlers.
+&nbsp;     // Allocate work to workers.
+&nbsp; } else {
+&nbsp;     // Worker process.
+&nbsp;     // Set up message handlers.
+&nbsp;     // Do work, send messages to master thread.
+&nbsp; }
+&nbsp;
+					</code></pre>
+				</section>
+				<section>
+					<pre><code class="hljs javascript" data-trim contenteditable>
+&nbsp;
+&nbsp; let threads = new Set();
+&nbsp;
+&nbsp; for (let i=0; i < numCpus; i++) {
+&nbsp;     threads.add(new Worker(__filename, { workerData: 3 }));
+&nbsp; }
+&nbsp;
+					</code></pre>
+				</section>
+				<section>
+					<pre><code class="hljs javascript" data-trim contenteditable>
+&nbsp;
+&nbsp; for (let worker of threads) {
+&nbsp;     worker.on("message", (msg) => { // handle it });
+&nbsp;     worker.on("exit", (code) => { // handle it });
+&nbsp;     worker.on("error", console.error);
+&nbsp; }
+&nbsp;
+					</code></pre>
+				</section>
+				<section>
+					<pre><code class="hljs javascript" data-trim contenteditable>
+&nbsp;
+&nbsp; // `worker thread ${threadId}`
+&nbsp;
+&nbsp; for (let i=0; i < workerData; i++) {
+&nbsp;     let result = fibonacci(40);
+&nbsp;     parentPort.postMessage(result);
+&nbsp; }
+&nbsp;
+					</code></pre>
+				</section>
+				<section>
+					<h3>General advice 1</h3>
+					<ul>
+					    <li>Know if your app is a good candidate.</li>
+							<li>Know the pitfalls, google	 "Threads are Evil"</li>
+							<li>Know the cpu architecture:<br>
+								<code>lscpu</code><br>
+								<code>sysctl</code><br>
+								<code>node require('os').cpus()</code>
+							</li>
+					</ul>
+				</section>
+				<section>
+					<h3>General advice 2</h3>
+					<ul>
+						  <li>Don't expect eg. 4-fold increase on 4 cores.</li>
+							<li>Not all tasks scale well (eg. simple iteration)</li>
+							<li>There's overhead for spawning threads / forking
+									 processes. Better to create a "pool" of them.</li>
+							<li>Plan how to divide work (eg. round-robin) &amp; correlate results.</li>
+							<li>Avoid lock-in; weigh benefits / complexity.</li>
+				</pre>
+				</section>
+				<section>
+					Thanks!
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
