@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <title>JSDoc type definitions</title>
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/sky.css">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section>
+                    <p>You Might Not Need</p>
+                    <h2>TypeScript</h2>
+                    <p>(a pure JS alternative)</p>
+                </section>
+                <section>
+                    <p>Darren DeRidder</p>
+                    <p>@73rhodes</p>
+                </section>
+                <section>
+                    <h3>
+                        Thoughts on Types    
+                    </h3>
+                    <div class="fragment">
+                        <ul>
+                            <li>
+                                <a href="https://www.youtube.com/watch?v=_kXiH1Yiemw">
+                                Static Types are Over-rated: The Dynamic Duo - Loose Types and Object Extension
+                                </a>
+                            </li>
+                            <li> Type correctness does not guarantee program correctness.</li>
+                            <li> Misnomers and misconceptions: "strong types", "type-safe" etc.</small></li>
+                        </ul>
+                    </div>
+                    <aside class="notes">
+                        <ul>
+                            <li> Lack of dynamic types leads to ugly hacks: ie. `void *`, generics, variadic functions. </li>
+                            <li> Dynamic types added to C++11, Objective-C.</li>
+                            <li> Functions that work on any type that implements the requirements (ie. valueOf method).</li>
+                            <li> Allow map, filter, forEach etc to be used generically.</li>
+                            <li> Code that is well organized, linted, and unit tested is unlikely to have type errors.</li>
+                        </ul>
+                    </aside>
+                </section>
+                <section>
+                    <h3>Why use types then?</h3>
+                    <ul>
+                        <li>Useful for static analysis: hinting, linting, code completion.</li>
+                        <li>Ideally, up front in dev tool chain; IDE plugins etc.</li>
+                    </ul>
+                    <aside class="notes"> </aside>
+                </section>
+                <section>
+                    <h3>Tools for Types</h3>
+                    <ul>
+                        <li class="fragment fade-in-then-semi-out">JSDoc</li>
+                        <li class="fragment fade-in-then-semi-out">Flow</li>
+                        <li class="fragment fade-in-then-semi-out">TypeScript</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Type Definitions with JSDoc</h3>
+                    <ul>
+                        <li>Doesn't invalidate your JavaScript.</li>
+                        <li>No transpiler needed.</li>
+                        <li>Annotations are kept in comments.</li>
+                        <li>Code and typedefs together: no separate typings module eg. `@types/foo`.</li>
+                        <li>Useful on its own as documentation.</li>
+                    </ul>
+                    <aside class="notes"></aside>
+                </section>
+                <section>
+                    <h3>Getting Started</h3>
+                    <ul>
+                        <li>
+                        <a href="https://medium.com/@trukrs/type-safe-javascript-with-jsdoc-7a2a63209b76">Type-safe JavaScript with JSDoc</a>
+                        </li>
+                        <li>
+                        <a href="https://www.typescriptlang.org/docs/handbook/type-checking-javascript-files.html">Type Checking JavaScript Files</a>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                   ✅ javascript.implicitProjectConfig.checkJs 
+                   <img src="vscodesettings.png"/>
+                </section>
+                <section>
+jsconfig.json
+                    <pre><code class="hljs javascript" data-trim contenteditable>
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "checkJs":  true,
+    "target": "es2015"
+  },
+  "exclude": [
+    "node_modules/"
+  ]
+}
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Defining types</h3>
+                    <pre><code class="hljs javascript" data-trim contenteditable>
+/**
+ * @typedef CoverageTotals
+ * @property {number} totalCoverItemScores
+ * @property {number} totalCoverItemWeights
+ */
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Declaring a type</h3>
+                    <pre><code class="hljs javascript" data-trim contenteditable>
+    /** @type {coverageTotals} rc */ 
+    let rc = {
+      totalCoverItemScores: 0,
+      totalCoverItemWeights: 0
+    };
+                    </code></pre>
+                </section>
+                <section>
+                   <h3>Type Casting</h3>
+                   <pre><code class="hljs" data-trim contenteditable>
+                   let author = /** @type {typedefs.Person} */ (getDetails("author"));
+                   </code></pre>
+                   <small>Note the parenthesis around expression being typecast.</small>
+                </section>
+                <section>
+                    <h3>Inheritance / Extending</h3>
+                    <pre><code class="hljs" data-trim contenteditable>
+/**
+ * @typdef FooAttributes
+ * @property {string} foo
+ * @property {number} fizz
+ *
+ * @typedef BarAttributes
+ * @property {string} bar
+ * @property {number} buzz
+ *
+ * @typdef {FooAtributes & BarAttributes} Foobar
+ */
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Types in separate file</h3>
+                    Empty module eg. `typdefs.js`:
+                    <pre><code class="hljs" data-trim contenteditable>
+                    /**
+                     * @file typdefs.js
+                     *
+                     * ... JSDoc typedefs
+                     */
+                    module.exports = {}
+                    </code></pre>
+                    Using it:
+                    <pre><code class="hljs" data-trim contenteditable>
+                    const typedefs = require("./typedefs");
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Typdefs for Node</h3>
+                    <pre><code class="hljs javascript" data-trim contenteditable>
+                    npm install @types/node
+                    </code></pre>
+                    Typescript / JSDoc typdefs can co-exist :-)
+                </section>
+                <section>
+                    <p>Typedef as one of several strings</p>
+                    <pre><code class="hljs javascript" data-trim contenteditable>
+                    /**
+                     * @typedef {('assert' | 'cover' | 'assume')} AssertionKind
+                     */
+                    </code></pre>
+                 </section>
+            </div>
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.js"></script>
+
+        <script>
+            // More info about config & dependencies:
+            // - https://github.com/hakimel/reveal.js#configuration
+            // - https://github.com/hakimel/reveal.js#dependencies
+            Reveal.initialize({
+                dependencies: [
+                    { src: 'plugin/markdown/marked.js' },
+                    { src: 'plugin/markdown/markdown.js' },
+                    { src: 'plugin/notes/notes.js', async: true },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+                ]
+            });
+        </script>
+    </body>
+</html>
