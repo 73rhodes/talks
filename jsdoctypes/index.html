@@ -45,7 +45,7 @@
                                 </a>
                             </li>
                             <li> Type correctness does not guarantee program correctness.</li>
-                            <li> Misnomers and misconceptions: "strong types", "type-safe" etc.</small></li>
+                            <li> Misnomers and misconceptions: "strong typing", "type-safe" etc.</small></li>
                         </ul>
                     </div>
                     <aside class="notes">
@@ -105,6 +105,7 @@ jsconfig.json
                     <pre><code class="hljs javascript" data-trim contenteditable>
 {
   "compilerOptions": {
+    "module": "commonjs",
     "moduleResolution": "node",
     "checkJs":  true,
     "target": "es2015"
@@ -160,7 +161,7 @@ jsconfig.json
                 </section>
                 <section>
                     <h3>Types in separate file</h3>
-                    Empty module eg. `typdefs.js`:
+                    Empty module eg. typedefs.js:
                     <pre><code class="hljs" data-trim contenteditable>
                     /**
                      * @file typdefs.js
@@ -188,6 +189,33 @@ jsconfig.json
                      * @typedef {('assert' | 'cover' | 'assume')} AssertionKind
                      */
                     </code></pre>
+                 </section>
+                 <section>
+                    <h3>Module Exports</h3>
+                    <p>Be careful declaring module exports. Intellisense has trouble recognizing some module export syntax.</p>
+                    <pre><code class="hljs javascript" data-trim contenteditable>
+                    // Borken.
+                    module.exports = {
+                       myMethodA,
+                       myMethodB
+                    };
+                    </code></pre>
+                    <pre><code class="hljs javascript" data-trim contenteditable>
+                    // Not borken.
+                    exports.myMethodA = myMethodA;
+                    exports.myMethodB = myMethodB;
+                    </code></pre>
+                 </section>
+                 <section>
+                     <h3>Interoperability</h3>
+                     @type can refer to a TypeScript OR a JSDoc type definition.
+                 </section>
+                 <section>
+                     <p>What about other IDEs?</p>
+                     <p class="fragment">
+                     <a href="https://medium.com/@nicklee1/configuring-sublime-text-3-for-modern-es6-js-projects-6f3fd69e95de">
+                     Configuring Sublime for Modern ES Projects</a>
+                     </p>
                  </section>
             </div>
         </div>
