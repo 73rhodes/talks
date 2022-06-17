@@ -259,14 +259,15 @@ if (cluster.isPrimary) {
 					</code></pre>
 				</section>
 				<section>
-					<h3>When to use what</h3>
-					<div>`cluster`</div>
+					<h3>When to use cluster</h3>
 					<ul>
 						<li>for networking; more requests in parallel</li>
 						<li>processes bind to same port; round-robin requests</li>
 						<li>each process gets its own `libuv`, memory, etc.</li>
 					</ul>
-					<div>`worker-threads`</div>
+				</section>
+				<section>	
+					<h3>When to use worker-threads</h3>
 					<ul>
 						<li>long-running CPU-bound tasks</li>
 						<li>threads share a copy of `libuv`</li>
