@@ -260,13 +260,13 @@ if (cluster.isPrimary) {
 				</section>
 				<section>
 					<h3>When to use what</h3>
-					<h4>cluster</h4>
+					<div>`cluster`</div>
 					<ul>
 						<li>for networking; more requests in parallel</li>
 						<li>processes bind to same port; round-robin requests</li>
 						<li>each process gets its own `libuv`, memory, etc.</li>
 					</ul>
-					<h4>`worker-threads`</h4>
+					<div>`worker-threads`</div>
 					<ul>
 						<li>long-running CPU-bound tasks</li>
 						<li>threads share a copy of `libuv`</li>
