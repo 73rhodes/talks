@@ -263,9 +263,9 @@ if (cluster.isPrimary) {
 					<ul>
 						<li>`cluster`
 							<ul>
-								<li>designed for networking, to handle more requests in parallel</li>
-								<li>processes bind to same port and round-robin requests</li>
-								<li>each process gets a copy of `libuv`, own memory, etc.</li>
+								<li>for networking; more requests in parallel</li>
+								<li>processes bind to same port; round-robin requests</li>
+								<li>each process gets its own `libuv`, memory, etc.</li>
 							</ul>
 						</li>
 						<li>`worker-threads`
