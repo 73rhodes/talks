@@ -107,17 +107,17 @@
 				</section>
 				<section>
 					<pre><code class="hljs javascript" data-trim contenteditable>
-if (cluster.isMaster) {
-    // Master process.
+if (cluster.isPrimary) {
+    // Primary process here.
     // Fork workers.
     // Handle messages from workers.
-    // Print result when all workers exit.
     // Allocate work to worker processes.
     // Finally tell workers to shut down.
+    // Print result when all workers exit.
 } else {
-    // Worker process.
-    // Handle messages from master process.
-    // Send messages back to master process.
+    // Worker process here.
+    // Handle messages from primary process.
+    // Send messages back to primary process.
 }
 					</code></pre>
 				</section>
@@ -136,10 +136,10 @@ if (cluster.isMaster) {
 				<section>
 					<pre><code class="hljs" data-trim contenteditable>
 &nbsp;
-&nbsp; // Master sending messages to workers.
+&nbsp; // Primary sending messages to workers.
 &nbsp;
 &nbsp; for (var id in cluster.workers) {
-&nbsp;   cluster.workers[id].send('Hello from master');
+&nbsp;   cluster.workers[id].send('Hello from primary');
 &nbsp; }
 &nbsp;
 					</code></pre>
@@ -147,7 +147,7 @@ if (cluster.isMaster) {
 				<section>
 					<pre><code class="hljs" data-trim contenteditable>
 &nbsp;
-&nbsp; // Master handling events from workers.
+&nbsp; // Primary handling events from workers.
 &nbsp;
 &nbsp; cluster.on("message", myMessageHandler);
 &nbsp; cluster.on("error", myErrorHandler);
@@ -161,7 +161,7 @@ if (cluster.isMaster) {
 &nbsp; // Worker
 &nbsp;
 &nbsp; process.on("message", (msg) => {
-&nbsp;    console.log(`Got message "${msg}" from master.`);
+&nbsp;    console.log(`Got message "${msg}" from primary.`);
 &nbsp;    process.send(`Hello from worker ${cluster.worker.id}`);
 &nbsp; });
 &nbsp;
@@ -199,7 +199,7 @@ if (cluster.isMaster) {
 						<ul>
 							<li>On by default in node 11.9.0 (latest) but otherwise requires --experimental flag.</li>
 	            <li>You tell the thread what file to run with. cluster forks child processes
-	             running the same code as master process but with worker threads you
+	             running the same code as primary process but with worker threads you
 	             can spawn threads that start up in any file.<li>
 	            <li>nothing like cluster.workers to make your own Set(), add workers to it,
 	             then for each worker in set attach event handlers.</li>
@@ -212,14 +212,14 @@ if (cluster.isMaster) {
 					<pre><code class="hljs javascript" data-trim contenteditable>
 &nbsp;
 &nbsp; if (isMainThread) {
-&nbsp;     // Master thread.
+&nbsp;     // Main thread here.
 &nbsp;     // Spawn worker threads.
 &nbsp;     // Set up message handlers.
 &nbsp;     // Allocate work to workers.
 &nbsp; } else {
 &nbsp;     // Worker process.
 &nbsp;     // Set up message handlers.
-&nbsp;     // Do work, send messages to master thread.
+&nbsp;     // Do work, send messages to main thread.
 &nbsp; }
 &nbsp;
 					</code></pre>
@@ -257,6 +257,25 @@ if (cluster.isMaster) {
 &nbsp; }
 &nbsp;
 					</code></pre>
+				</section>
+				<section>
+					<h3>When to use what:
+					<ul>
+						<li>`cluster`
+							<ul>
+								<li>designed for networking, to handle more requests in parallel</li>
+								<li>processes bind to same port and round-robin requests</li>
+								<li>each process gets a copy of `libuv`, own memory, etc.</li>
+							</ul>
+						</li>
+						<li>`worker-threads`
+							<ul>
+								<li>long-running CPU-bound tasks</li>
+								<li>threads share a copy of `libuv`</li>
+								<li>uses fewer resources</li>
+							</ul>
+						</li>
+					</ul>
 				</section>
 				<section>
 					<h3>General advice 1</h3>
