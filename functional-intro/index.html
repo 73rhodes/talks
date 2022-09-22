@@ -19,7 +19,7 @@
 
     <!-- Printing and PDF exports -->
     <script>
-      var link = document.createElement( 'link' );
+      let link = document.createElement( 'link' );
       link.rel = 'stylesheet';
       link.type = 'text/css';
       link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
@@ -200,7 +200,7 @@
               };
             }
 
-            var addOne = adder(1);
+            let addOne = adder(1);
 
             [1,2,3,4].map(addOne);
             // [2, 3, 4, 5]
@@ -215,7 +215,7 @@
           - Always returns the same output given the same input
           ``` javascript
             // Not pure
-            var count = 0;
+            let count = 0;
             function increment(amount){
               return count += amount;
             }
@@ -244,10 +244,10 @@
           }
 
           // Heavy computation
-          var value = fib(13);
+          let value = fib(13);
 
           // Replacement can be done at compile time
-          var value = 233;
+          let value = 233;
           ```
 
           </script>
@@ -267,10 +267,10 @@
             });
           }
 
-          var cuteCat = {cuteness: 2};
+          let cuteCat = {cuteness: 2};
           // Make this cat immutable
           Object.seal(cuteCat);
-          var cuterCat = fluff(cuteCat);
+          let cuterCat = fluff(cuteCat);
           cuteCat.cuteness !== cuterCat.cuteness;
           ```
           </script>
@@ -283,17 +283,17 @@
           ```javascript
           function map(fn){
             return function(array){
-              var length = array.length;
-              var result = new Array(length);
+              let length = array.length;
+              let result = new Array(length);
 
-              for(var i = 0; i < length; i++)
+              for(let i = 0; i < length; i++)
                 result[i] = fn(array[i]);
 
               return result;
             }
           }
 
-          var addOneToAll = map(addOne);
+          let addOneToAll = map(addOne);
 
           addOneToAll([1,2,3,4]); // [2,3,4,5]
           ```
@@ -307,17 +307,15 @@
             ## Example: list iteration
             ```javascript
             // Imperative
-            var array = [1,2,3,4];
-            var result = [];
-            for(var i = 0; i < array.length; i++){
-              var value = array[i];
+            let array = [1,2,3,4];
+            let result = [];
+            for(let i = 0; i < array.length; i++){
+              let value = array[i];
               result[i] = value + 1;
             }
 
             // Functional
-            var result = array.map(function(value){
-              return value + 1;
-            });
+            let result = array.map(value => value + 1);
             ```
             </script>
           </section>
@@ -328,15 +326,15 @@
             ```javascript
             // Cache complex computations
             function memoize(fn){
-              var cache = {}:
+              let cache = {}:
               return function(){
-                var key = [].join.call(arguments, "-");
+                let key = [].join.call(arguments, "-");
                 if(key in cache) return cache[key];
                 return cache[key] = fn.apply(this, arguments);
               }
             }
 
-            var sqrt = memoize(Math.sqrt.bind(Math));
+            let sqrt = memoize(Math.sqrt.bind(Math));
             sqrt(21337); // Does the computation
             sqrt(21337); // Uses pre-computed value
             ```
@@ -347,25 +345,15 @@
             <script type="text/template">
             ### Partial function application
             ```javascript
-            function partiallyApply(fn){
-              // All but first argument;
-              var args = [].slice.call(arguments, 1);
-              args.unshift[null];
-              return fn.bind.apply(fn, args);
+            function add(a, b){
+              return a + b;
             }
 
-            function map(fn, array) {}
+            // partially apply the add function,
+            // with the "a" parameter set to 1
+            let addOne = add.bind(null, 1);
 
-            function getUserDataPromise(id) {}
-
-            function getFriendIdsPromise() {}
-
-            funtction renderPersonList(targetDom, people) {}
-
-            getFriendIds()
-            .then(map(getUserDataPromise)))
-            .then(Promise.all.bind(Promise))
-            .then(partial(renderPersonList(document.body)));
+            addOne(2); // => 3
             ```
             </script>
           </section>
@@ -378,12 +366,12 @@
             <script type="text/template">
             ### Imperative
             ```
-var result;
+let result;
 
 function capWords(input) {
-  var counter;
-  var inputArray = input.split(" ");
-  var transformed = "";
+  let counter;
+  let inputArray = input.split(" ");
+  let transformed = "";
   result = [];
   for (counter = 0; counter < inputArray.length; counter++) {
     transformed = [
@@ -403,27 +391,27 @@ alert(result.join(" "));
             <script type="text/template">
             ### Object Oriented
             ```
-var SomeText = function(text) {
+let SomeText = function(text) {
   this.text = text;
 };
 
-SomeText.prototype.capify = function(str) {
-  var firstLetter = str.charAt(0);
-  var remainder = str.substring(1);
+SomeText.prototype.capitalize = function(str) {
+  let firstLetter = str.charAt(0);
+  let remainder = str.substring(1);
   return [firstLetter.toUpperCase(), remainder].join("");
 };
 
-SomeText.prototype.capifyWords = function() {
-  var result = [];
-  var textArray = this.text.split(" ");
-  for (var counter = 0; counter < textArray.length; counter++) {
-    result.push(this.capify(textArray[counter]));
+SomeText.prototype.capitalizeWords = function() {
+  let result = [];
+  let textArray = this.text.split(" ");
+  for (let counter = 0; counter < textArray.length; counter++) {
+    result.push(this.capitalize(textArray[counter]));
   }
   return result.join(" ");
 };
 
-var newText = new SomeText('hello world!');
-alert(newText.capifyWords());
+let newText = new SomeText('hello world!');
+alert(newText.capitalizeWords());
 ```
             </script>
           </section>
@@ -431,15 +419,15 @@ alert(newText.capifyWords());
             <script type="text/template">
             ### Functional
             ```
-var capify = function(str) {
+let capitalize = function(str) {
   return [str.charAt(0).toUpperCase(), str.substring(1)].join("");
 };
 
-var processWords = function(fn, str) {
+let processWords = function(fn, str) {
   return str.split(" ").map(fn).join(" ");
 };
 
-alert(processWords(capify, 'hello world!'));
+alert(processWords(capitalize, 'hello world!'));
 ```
             </script>
           </section>
@@ -452,7 +440,7 @@ alert(processWords(capify, 'hello world!'));
           - more context switching
           - terminology and function composition can take time to get used to
           ```javascript
-          var userIdsPromise = getUsers().then(map(pluck("id")));
+          let userIdsPromise = getUsers().then(map(pluck("id")));
           ```
           </script>
         </section>
@@ -463,6 +451,7 @@ alert(processWords(capify, 'hello world!'));
           ### Resources
 
            - [Mostly Adequate Guide to Functional Programming](https://github.com/MostlyAdequate/mostly-adequate-guide)
+           - [Eloquent Javascript Chapter 5: Higher order function](https://eloquentjavascript.net/05_higher_order.html)
            - [reactivex.io](http://reactivex.io/learnrx/)
            - [Sitepoint: Intro to Functional Programming](http://www.sitepoint.com/introduction-functional-javascript/)
           </script>
