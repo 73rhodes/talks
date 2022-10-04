@@ -276,6 +276,46 @@
         </section>
 
         <section>
+          <h2>dclassify: prepare data</h2>
+          <pre><code class="language-javascript">
+ const item1 = new Document(['awful','basic','cautious']);
+ const item2 = new Document(['awful','basic','cautious']);
+ const item3 = new Document(['awful','delightful','energetic']);
+ const item4 = new Document(['cautious', 'delightful']);
+ const item5 = new Document(['energetic']);
+ const item6 = new Document(['basic','delightful','energetic']);
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>dclassify: Curate the data</h2>
+          <pre><code class="language-javascript">
+ const data = new DataSet();
+ data.add('bad',  [item1, item2, item3]);    
+ data.add('good', [item4, item5, item6]);
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>dclassify: train the classifier</h2>
+          <pre><code class="language-javascript">
+ const classifier = new Classifier(options);
+    
+ classifier.train(data);
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>dclassify: using the classifier</h2>
+          <pre><code class="language-javascript">
+ const testDoc = new Document('testDoc', ['b','c', 'e']);    
+ const result1 = classifier.classify(testDoc);
+
+ console.log(result1);
+          </code></pre>
+        </section>
+
+        <section>
           <h2>Thanks</h2>
           <a href="http://73rhodes.github.io/talks/MachineLearning">
           http://73rhodes.github.io/talks/MachineLearning
