@@ -12,7 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
 
     <link rel="stylesheet" href="css/reveal.css">
-    <link rel="stylesheet" href="css/theme/white.css" id="theme">
+    <link rel="stylesheet" href="css/theme/sky.css" id="theme">
 
     <!-- Code syntax highlighting -->
     <link rel="stylesheet" href="lib/css/zenburn.css">
@@ -41,7 +41,7 @@
           <script type="text/template">
           ### Intro to Functional Programming
 
-          [@rangermauve](http://twitter.com/rangermauve) / [@73rhodes](http://twitter.com/73rhodes)
+          by [@73rhodes](http://twitter.com/73rhodes) and [@rangermauve](http://twitter.com/rangermauve)
           </script>
         </section>
 
@@ -57,7 +57,7 @@
           </script>
         </section>
 
-        <section data-markdown>
+        <section data-markdown data-notes="functions the primary building block">
           <script type="text/template">
           ### What is Functional Programming?
 
@@ -67,7 +67,7 @@
           </script>
         </section>
 
-        <section>
+        <section data-notes="javascript is a functional programming language data-notes="javascript is a functional programming language">
           <h4>Functional Programming in Javascript?</h3>
           <ul>
           <li>anonymous functions with closures
@@ -111,14 +111,13 @@
         </section>
 
         <section>
-        <section data-markdown>
-          <script type="text/template">
-            ## Benefits of FP
-
-            - Simpler code, less code.
-            - Easier to test.
-            - Composable functions - building blocks for programs.
-          </script>
+        <section>
+          <h2>Benefits of FP</h2>
+          <ul class="fragment">
+            <li>Simpler code, less code.
+            <li>Easier to test, better coverage.
+            <li>Composable functions - building blocks for programs.
+          </ul>
         </section>
         <section data-markdown>
           <script type="text/template">
@@ -161,7 +160,7 @@
           </section>
         </section>
 
-        <section data-markdown>
+        <section data-markdown data-notes="unexpected changes / breakage = side effects">
           <script type="text/template">
           ### Drawbacks of OO
           - State and functionality are mixed together.
@@ -343,7 +342,7 @@
 
           <section data-markdown>
             <script type="text/template">
-            ### Partial function application
+            ### Example: Partial function application
             ```javascript
             function add(a, b){
               return a + b;
@@ -359,20 +358,19 @@
           </section>
 
           <section>
-            <h2>Example OO vs FP approach</h2>
+            <h2>Example: OO / FP comparison</h2>
+            <p>Let's capitalize each word in a sentence.</p>
           </section>
 
           <section data-markdown>
             <script type="text/template">
             ### Imperative
             ```
-let result;
-
 function capWords(input) {
   let counter;
   let inputArray = input.split(" ");
   let transformed = "";
-  result = [];
+  let result = [];
   for (counter = 0; counter < inputArray.length; counter++) {
     transformed = [
       inputArray[counter].charAt(0).toUpperCase(), 
@@ -380,10 +378,10 @@ function capWords(input) {
     ].join("");
     result.push(transformed);
   }
-};
+  return result.join(" ");
+}
 
-capWords('hello world!');
-alert(result.join(" "));
+alert( capWords('hello world!') );
 ```
             </script>
           </section>
@@ -419,13 +417,11 @@ alert(newText.capitalizeWords());
             <script type="text/template">
             ### Functional
             ```
-let capitalize = function(str) {
-  return [str.charAt(0).toUpperCase(), str.substring(1)].join("");
-};
+const capitalize = (str) => {
+  [str.charAt(0).toUpperCase(), str.substring(1)].join("");
+}
 
-let processWords = function(fn, str) {
-  return str.split(" ").map(fn).join(" ");
-};
+const processWords = (fn, str) => str.split(" ").map(fn).join(" ");
 
 alert(processWords(capitalize, 'hello world!'));
 ```
@@ -438,8 +434,9 @@ alert(processWords(capitalize, 'hello world!'));
           ### Downsides to FP
           - more memory
           - more context switching
-          - terminology and function composition can take time to get used to
+          - terminology & function composition takes time to grok
           ```javascript
+          // huh?
           let userIdsPromise = getUsers().then(map(pluck("id")));
           ```
           </script>
@@ -451,7 +448,7 @@ alert(processWords(capitalize, 'hello world!'));
           ### Resources
 
            - [Mostly Adequate Guide to Functional Programming](https://github.com/MostlyAdequate/mostly-adequate-guide)
-           - [Eloquent Javascript Chapter 5: Higher order function](https://eloquentjavascript.net/05_higher_order.html)
+           - [Eloquent Javascript Chapter 5: Higher order functions](https://eloquentjavascript.net/05_higher_order.html)
            - [reactivex.io](http://reactivex.io/learnrx/)
            - [Sitepoint: Intro to Functional Programming](http://www.sitepoint.com/introduction-functional-javascript/)
           </script>
