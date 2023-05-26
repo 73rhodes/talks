@@ -178,7 +178,11 @@ if (cluster.isPrimary) {
 					<pre><code class="hljs javascript" data-trim contenteditable>
 &nbsp;
 &nbsp; // Shutting down
-&nbsp; Object.keys(cluster.workers).length
+&nbsp; cluster.on("exit", (worker, code, signal) => {
+&nbsp;    if(Object.keys(cluster.workers).length === 0) {
+&nbsp;       // finalization
+&nbsp;    }
+&nbsp; });
 &nbsp;
 				 </code></pre>
 				 </section>

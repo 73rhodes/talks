@@ -9,8 +9,9 @@ if (isMainThread) {
   // console.log("This is the main thread.");
   let threads = new Set();
 
+  console.log(`spawning ${numCpus} threads...`);
   for (let i=0; i < numCpus; i++) {
-    threads.add(new Worker(__filename, { workerData: 3 }));
+    threads.add(new Worker(__filename, { workerData: (12/numCpus) }));
   }
   for (let worker of threads) {
     worker.on("message", (msg) => {

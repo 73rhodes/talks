@@ -9,6 +9,7 @@ if (cluster.isMaster) {
   // Master process.
 
   // Fork workers
+  console.log(`forking ${numWorkers} child processes...`);
   for (let i = 0; i < numWorkers; i++) {
     cluster.fork();
   }
@@ -28,7 +29,8 @@ if (cluster.isMaster) {
 
   // Allocate work to worker processes
   for (let i = 0; i < 12; i++) {
-    let id = (i%4)+1;
+    // let id = (i%4)+1;
+    let id = (i % numWorkers)+1;
     cluster.workers[id].send("calculate");
   }
 
