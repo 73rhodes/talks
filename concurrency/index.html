@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Concurrency - a bug story</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/black.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+
+<section data-auto-animate data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <div data-id="foobarzz">
+    <h2>
+    Concurrency
+    </h2>
+    <h3>
+    a bug story 🐛
+    </h3>
+  </div>
+  <div class="fragment">(realtime concepts in async programming)</div>
+  <aside class="notes">
+    "Concurrency - a bug story" might not be the best
+    title because concurrency in the traditional sense is not really a thing in
+    NodeJS. It is commonly believed that "Javascript is single-threaded" and we
+    don't have concurrency in the same way we as we do in a real-time,
+    multi-threaded C++ application. However as we will see this is not excactly
+    the right way to look at it, and there are some very interesting comparisons
+    between realtime systems concepts, like concurrency, and asynchronous programming.
+    So this is really
+    a talk about the parallels between multi-threaded realtime systems 
+    and asynchronous event-driven programming in NodeJS and what lessons we can learn
+    from them. So the bug story is a starting point to talk about real-
+    time, multi-threaded systems concepts as they apply to an asyncronous
+    programming environment like NodeJS.  
+  </aside>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  Node v.20 upgrade deployment:
+  <p class="fragment"><img src="pod_restarts.png"></img></p>
+  <p class="fragment">
+  Lots of websocket pods restarts...💥
+  </p>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <img src="error_logs.png"></img>
+  <p class="fragment">
+  Trying to write a response after it has been sent. ☠️
+  </p>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+Somewhere in here:
+  <img height="600px" src="faye_code.png"></img>
+  <aside class="notes">
+    Two separate pieces of event-driven code are both trying to write to the same <code>response</code> object. 
+  </aside>
+</section>
+  
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <pre><code style="font-size:medium; line-height:normal" class="stretch" data-trim data-noescape data-line-numbers="1-36|8,9|11-35|24-33|32" data-ln-start-from="107">
+  handle: function(request, response) {
+      var requestUrl    = url.parse(request.url, true),
+          requestMethod = request.method,
+          self          = this;
+  
+      request.originalUrl = request.url;
+  
+      request.on('error', function(error) { self._returnError(response, error) });
+      response.on('error', function(error) { self._returnError(null, error) });
+  
+      if (this._static.test(requestUrl.pathname))
+        return this._static.call(request, response);
+  
+      // http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
+      if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST')
+        return this._handleOptions(request, response);
+  
+      if (EventSource.isEventSource(request))
+        return this.handleEventSource(request, response);
+  
+      if (requestMethod === 'GET')
+        return this._callWithParams(request, response, requestUrl.query);
+  
+      if (requestMethod === 'POST')
+        return this._concatStream(request, function(data) {
+          var type   = (request.headers['content-type'] || '').split(';')[0],
+              params = (type === 'application/json')
+                     ? { message: data }
+                     : querystring.parse(data);
+  
+          request.body = data;
+          this._callWithParams(request, response, params);
+        }, this);
+  
+      this._returnError(response, { message: 'Unrecognized request type' });
+    },
+  </code></pre>
+  <aside class="notes">
+    <ul>
+      <li>Error handlers on lines 114 / 115 finalize the response.
+      <li>However, after error handlers run, the code from 117 is not pre-empted.
+      <li>On line 131 _concatStream contains event-driven async code.
+      <li>Request error handler triggering before _concatStream event handlers causes response to be unwritable.
+      </ul>    
+  </aside>
+  </section>
+  
+  <!-- section>
+  <pre><code data-trim data-noescape data-line-numbers="1|10-19" data-ln-start-from="107">
+    _concatStream: function(stream, callback, context) {
+      var chunks = [],
+          length = 0;
+  
+      stream.on('data', function(chunk) {
+        chunks.push(chunk);
+        length += chunk.length;
+      });
+  
+      stream.on('end', function() {
+        var buffer = Buffer.alloc(length),
+            offset = 0;
+  
+        for (var i = 0, n = chunks.length; i < n; i++) {
+          chunks[i].copy(buffer, offset);
+          offset += chunks[i].length;
+        }
+        callback.call(context, buffer.toString('utf8'));
+      });
+    },
+  </code></pre>
+  </section -->
+  
+  <section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <pre><code class="stretch" data-trim data-noescape data-line-numbers="1-17|5,7,11-12,14" data-ln-start-from="107">
+   _callWithParams: function(request, response, params) {
+        //...
+
+        if (origin) {
+          headers['Access-Control-Allow-Origin'] = origin;
+        }
+        headers['Cache-Control'] = 'no-cache, no-store';
+  
+        this._server.process(message, request, function(replies) {
+          // ...
+          headers['Content-Length'] = new Buffer(body, 'utf8').length.toString();
+          headers['Connection'] = 'close';
+  
+          response.writeHead(200, headers);
+          response.end(body);
+        }, this);
+    },
+  </code></pre>
+  </section>
+  
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+      <h3>Why did it happen?</h3>
+      <img src="node20errorbubblesup.png"></img>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <h3>Deep dive</h3>
+      <ul>
+          <li>web sdk opens long-polling connection, quickly closes it
+          <li class="fragment">error handler on 114 fires, writes 400 response (ignored)
+          <li class="fragment">subsequently, server tries to respond to long-polling connection and fails to write to response
+          <li class="fragment">in node 16 → error handled on line 115
+          <li class="fragment">in node 20 → error bubbles up differently for some reason; unhandled
+      </ul>
+</section>
+
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <h3>"for some reason"</h3>
+  <ul>
+    <li class="fragment">This is a good view to take as a developer
+    <li class="fragment">Things can happen for reasons you don't know
+    <li class="fragment">Defensive programming
+    <li class="fragment">NASA: The Power of Ten</li>
+  </ul>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  Check <span style="font-family: 'Courier New', Courier, monospace;">response.isWritable</span><br>
+  before writing to the response
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+How does this relate to<br><br>
+<h3>"realtime"</h3><br>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <h3>What is real-time?</h3>
+  <pre contenteditable="true">
+                      your answer here
+  </pre>
+</section>  
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  Realtime Systems
+  <ul>
+    <li class="fragment">Event-driven - respond within time guarantee (ms)
+    <li class="fragment">Often used in safety-critical apps (fly-by-wire, braking systems, etc)
+    <li class="fragment">Time guarantees cannot allow system load to interfere with deadlines
+    <ul>
+      <li class="fragment">Shed load to maintain time guarantees
+      <li class="fragment">New requests are shed so the system can honour requests it already accepted
+      <li class="fragment">Dropping older jobs → nothing ever gets processed
+    </ul>
+  </ul>
+  <aside class="notes">
+    what is real-time software? is this problem related to real-time systems? (hint: real-time ~= event driven)
+  </aside>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  Realtime Systems
+  <ul>
+    <li class="fragment">multi-threaded - for parallelism
+    <li class="fragment">concurrent - different parts of code simultaneously
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+  </ul>
+  <aside class="notes">
+    what is real-time software? is this problem related to real-time systems? (hint: real-time ~= event driven)
+  </aside>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+    Real-time systems are
+    <h2>event-driven</h2>
+  <aside class="notes">
+    This is important because the node code we looked at is event driven. There
+    are error events that trigger error handlers.
+  </aside>
+  <div class="fragment">
+    <pre><code data-noescape data-language="javascript">
+        request.on ('error', function ... );
+        response.on ('error', function ... );
+    </code></pre>
+  </div>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <div>
+    <h2>Node apps</h2>
+    <ul style="list-style-type: none;">
+      <li>
+        ✅ Realtime: Event-driven
+      </li>
+      <li>
+        ✅ Concurrent: Asynchronous
+      </li>
+      <li>
+        ✅ Parallel: Multi-threaded ℹ️
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  Node is Multi-Threaded
+  <img src="top.png"/>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #687b7b, #485b5b)" >
+  Node is Multi-Threaded
+  <img src="nodejs2.png"/>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <h2>Concurrency in Node</h2>
+  <ul>
+    <li>In async tasks triggered by thread pool</li>
+    <li>No parallel execution of user code, but...</li>
+    <li class="fragment">There is concurrency of async tasks</li>
+    <li class="fragment">Event handling code can be interleaved</li>
+  </ul>
+  <div class="fragment"><a href="https://73rhodes.github.io/talks/multicore/">Scaling CPU-Intensive Node Apps</a></div>
+  <aside class="notes">
+    Is there concurrency in node? Yes. User code runs in a single thread, but
+    async user code can be executed in an interleaved way with other sections of user code.    
+    By introducing asyncronicity it exhibits characteristics of concurrency.
+  </aside>
+</section>
+
+<section data-auto-animate data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <pre><code class="stretch" data-trim data-noescape data-ln-start-from="1">
+  bool strike (int weapon, int strength) {
+    static int hitpoints = 100;
+    int damage = getDamage(weapon, strength);
+    bool rc = false;
+
+    if (hitpoints && damage) {
+      hitpoints = hitpoints - totalDamage;
+      if (hitpoints < 0) hitpoints = 0;
+      rc = true;
+    }
+
+    return rc;
+  }
+  </code></pre>
+  <div style="position:absolute; top:0; left: 1em; height: 3.5em; width: 10em; background-color:rgba(127,64,64,0.5)" class="fragment"></div>
+  <div style="position:absolute; top:0; left: 11em; height: 6em; width: 11em; background-color:rgba(64,127,64,0.5)" class="fragment"></div>
+  <div style="position:absolute; top:3.8em; left: 1em; height: 5.5em; width: 10em; background-color:rgba(127,64,64,0.5)" class="fragment"></div>
+  <div class="fragment">
+    This code is not re-entrant :-(<br>
+  </div>
+  <aside class="notes">
+    Concurrency: we often think of multi-threaded. What is multi-threaded? 
+    Compare w/ multi-threading on a single CPU (describe how this works by
+    interrupting one thread mid-flow and scheduling another on the CPU).
+  </aside>
+</section>  
+
+<section>
+  <pre><code>
+  async function handlerOne (req) {
+    await blahblah();
+    req.end(400, "your bad");
+  }
+
+  async function handlerTwo (req) {
+    await yadayada();
+    req.end(500, "my bad");
+  }        
+  </code></pre>
+  <div style="position:absolute; top:0.5em; left: 1em; height: 2em; width: 21em; background-color:rgba(127,64,64,0.5)" class="fragment"></div>
+  <div style="position:absolute; top:4.5em; left: 1em; height: 3em; width: 21em; background-color:rgba(127,64,64,0.5)" class="fragment"></div>
+  <div style="position:absolute; top:2.6em; left: 1em; height: 1.3em; width: 21em; background-color:rgba(127,64,64,0.5)" class="fragment"></div>
+</section>
+
+<section data-auto-animate>
+  <div style="position: absolute; top:-1.3em; left:1em;">multi-threaded (C++)</div>
+  <div data-id="foobar" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 17em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="foobar1" style="position:absolute; top:0.5em; left: 1.5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="foobar2" style="position:absolute; top:0.5em; left: 5em; height: 0em; width: 2em; background-color:rgba(64,127,64,0.5); border-radius:5px;"></div>
+  <div data-id="foobar3" style="position:absolute; top:0.5em; left: 8.5em; height: 0em; width: 2em; background-color:rgba(64,64,127,0.5); border-radius:5px;"></div>  
+</section>
+<section data-auto-animate>
+  <div style="position: absolute; top:-1.3em; left:1em;">multi-threaded (C++)</div>
+  <div data-id="foobar" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 17em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="foobar1" style="position:absolute; top:0.5em; left: 1.5em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="foobar2" style="position:absolute; top:0.5em; left: 5em; height: 3em; width: 2em; background-color:rgba(64,127,64,0.5); border-radius:5px;"></div>
+  <div data-id="foobar3" style="position:absolute; top:0.5em; left: 8.5em; height: 9em; width: 2em; background-color:rgba(64,64,127,0.5); border-radius:5px;"></div>  
+  <div data-id="foobar4" style="position:absolute; top:0.5em; left: 1.5em; top: 6.7em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="foobar5" style="position:absolute; top:0.5em; left: 5em; top: 3.7em; height: 0em; width: 2em; background-color:rgba(64,127,64,0.5); border-radius:5px;"></div>
+  <div data-id="foobar6" style="position:absolute; top:0.5em; left: 8.5em; top: 9.7em; height: 0em; width: 2em; background-color:rgba(64,64,127,0.5); border-radius:5px;"></div>
+</section>
+<section data-auto-animate>
+  <div style="position: absolute; top:-1.3em; left:1em;">multi-threaded (C++)</div>
+  <div data-id="foobar" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 17em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="foobar1" style="position:absolute; top:0.5em; left: 1.5em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="foobar2" style="position:absolute; top:0.5em; left: 5em; height: 3em; width: 2em; background-color:rgba(64,127,64,0.5); border-radius:5px;"></div>
+  <div data-id="foobar3" style="position:absolute; top:0.5em; left: 8.5em; height: 9em; width: 2em; background-color:rgba(64,64,127,0.5); border-radius:5px;"></div>  
+  <div data-id="foobar4" style="position:absolute; top:0.5em; left: 1.5em; top: 6.7em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="foobar5" style="position:absolute; top:0.5em; left: 5em; top: 3.7em; height: 9em; width: 2em; background-color:rgba(64,127,64,0.5); border-radius:5px;"></div>
+  <div data-id="foobar6" style="position:absolute; top:0.5em; left: 8.5em; top: 9.7em; height: 3em; width: 2em; background-color:rgba(64,64,127,0.5); border-radius:5px;"></div>
+</section>
+
+<section data-auto-animate>
+  <div data-id="ntitle" style="position: absolute; top:-1.3em; left:1em;">nodejs</div>
+  <div data-id="quxdoo" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 14em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="quxdoo1" style="position:absolute; top:0.5em; left: 1.5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo2" style="position:absolute; top:0.5em; left: 5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo3" style="position:absolute; top:0.5em; left: 8.5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>  
+  <div data-id="quxdoo4" style="position:absolute; top:0.5em; left: 1.5em; top: 6.7em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo5" style="position:absolute; top:0.5em; left: 5em; top: 3.7em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo6" style="position:absolute; top:0.5em; left: 8.5em; top: 9.7em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo7" style="color:gray; text-align:center; padding:1em; position:absolute; top: 0;left:17em; height: 11em; width: 4em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo8" style="color:gray; text-align:left; position:absolute; top: 1em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo9" style="color:gray; text-align:left; position:absolute; top: 3em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo10" style="color:gray; text-align:left; position:absolute; top: 5em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo11" style="color:gray; text-align:left; position:absolute; top: 7em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo12" style="color:gray; text-align:left; position:absolute; top: 9em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo13" style="color:gray; text-align:left; position:absolute; top: 11em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>  
+</section>
+<section data-auto-animate>
+  <div data-id="ntitle" style="position: absolute; top:-1.3em; left:1em;">nodejs</div>
+  <div data-id="quxdoo" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 14em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="quxdoo1" style="position:absolute; top:0.5em; left: 1.5em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo2" style="position:absolute; top:0.5em; left: 5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo3" style="position:absolute; top:0.5em; left: 8.5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>  
+  <div data-id="quxdoo4" style="position:absolute; top:0.5em; left: 1.5em; top: 6.7em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo5" style="position:absolute; top:0.5em; left: 5em; top: 3.7em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo6" style="position:absolute; top:0.5em; left: 8.5em; top: 9.7em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo7" style="color:gray; text-align:center; padding:1em; position:absolute; top: 0;left:17em; height: 11em; width: 4em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo8" style="color:gray; text-align:left; position:absolute; top: 1em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(127,64,64,0.5); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo9" style="color:gray; text-align:left; position:absolute; top: 3em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo10" style="color:gray; text-align:left; position:absolute; top: 5em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo11" style="color:gray; text-align:left; position:absolute; top: 7em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo12" style="color:gray; text-align:left; position:absolute; top: 9em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo13" style="color:gray; text-align:left; position:absolute; top: 11em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>  
+</section>
+<section data-auto-animate>
+  <div data-id="ntitle" style="position: absolute; top:-1.3em; left:1em;">nodejs</div>
+  <div data-id="quxdoo" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 14em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="quxdoo1" style="position:absolute; top:0.5em; left: 1.5em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo2" style="position:absolute; top:0.5em; left: 5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo3" style="position:absolute; top:0.5em; left: 8.5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>  
+  <div data-id="quxdoo4" style="position:absolute; top:0.5em; left: 1.5em; top: 6.7em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo5" style="position:absolute; top:0.5em; left: 5em; top: 3.7em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo6" style="position:absolute; top:0.5em; left: 8.5em; top: 9.7em; height: 3em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo7" style="color:gray; text-align:center; padding:1em; position:absolute; top: 0;left:17em; height: 11em; width: 4em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo8" style="color:gray; text-align:left; position:absolute; top: 1em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo9" style="color:gray; text-align:left; position:absolute; top: 3em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(127,64,64,0.5); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo10" style="color:gray; text-align:left; position:absolute; top: 5em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo11" style="color:gray; text-align:left; position:absolute; top: 7em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo12" style="color:gray; text-align:left; position:absolute; top: 9em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo13" style="color:gray; text-align:left; position:absolute; top: 11em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>  
+</section>
+<section data-auto-animate>
+  <div data-id="ntitle" style="position: absolute; top:-1.3em; left:1em;">nodejs</div>
+  <div data-id="quxdoo" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 14em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="quxdoo1" style="position:absolute; top:0.5em; left: 1.5em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo2" style="position:absolute; top:0.5em; left: 5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo3" style="position:absolute; top:0.5em; left: 8.5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>  
+  <div data-id="quxdoo4" style="position:absolute; top:0.5em; left: 1.5em; top: 6.7em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo5" style="position:absolute; top:0.5em; left: 5em; top: 3.7em; height: 9em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo6" style="position:absolute; top:0.5em; left: 8.5em; top: 9.7em; height: 3em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo7" style="color:gray; text-align:center; padding:1em; position:absolute; top: 0;left:17em; height: 11em; width: 4em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo8" style="color:gray; text-align:left; position:absolute; top: 1em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo9" style="color:gray; text-align:left; position:absolute; top: 3em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo10" style="color:gray; text-align:left; position:absolute; top: 5em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(127,64,64,0.5); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo11" style="color:gray; text-align:left; position:absolute; top: 7em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo12" style="color:gray; text-align:left; position:absolute; top: 9em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo13" style="color:gray; text-align:left; position:absolute; top: 11em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>  
+</section>
+<section data-auto-animate>
+  <div data-id="ntitle" style="position: absolute; top:-1.3em; left:1em;">nodejs</div>
+  <div data-id="quxdoo" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 14em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="quxdoo1" style="position:absolute; top:0.5em; left: 1.5em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo2" style="position:absolute; top:0.5em; left: 5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo3" style="position:absolute; top:0.5em; left: 8.5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>  
+  <div data-id="quxdoo4" style="position:absolute; top:0.5em; left: 1.5em; top: 6.7em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo5" style="position:absolute; top:0.5em; left: 5em; top: 3.7em; height: 9em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo6" style="position:absolute; top:0.5em; left: 8.5em; top: 9.7em; height: 3em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo7" style="color:gray; text-align:center; padding:1em; position:absolute; top: 0;left:17em; height: 11em; width: 4em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo8" style="color:gray; text-align:left; position:absolute; top: 1em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo9" style="color:gray; text-align:left; position:absolute; top: 3em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo10" style="color:gray; text-align:left; position:absolute; top: 5em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo11" style="color:gray; text-align:left; position:absolute; top: 7em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(127,64,64,0.5); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo12" style="color:gray; text-align:left; position:absolute; top: 9em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo13" style="color:gray; text-align:left; position:absolute; top: 11em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>  
+</section>
+<section data-auto-animate>
+  <div data-id="ntitle" style="position: absolute; top:-1.3em; left:1em;">nodejs</div>
+  <div data-id="quxdoo" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 14em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="quxdoo1" style="position:absolute; top:0.5em; left: 1.5em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo2" style="position:absolute; top:0.5em; left: 5em; height: 0em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo3" style="position:absolute; top:0.5em; left: 8.5em; height: 9em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>  
+  <div data-id="quxdoo4" style="position:absolute; top:0.5em; left: 1.5em; top: 6.7em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo5" style="position:absolute; top:0.5em; left: 5em; top: 3.7em; height: 9em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo6" style="position:absolute; top:0.5em; left: 8.5em; top: 9.7em; height: 3em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo7" style="color:gray; text-align:center; padding:1em; position:absolute; top: 0;left:17em; height: 11em; width: 4em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo8" style="color:gray; text-align:left; position:absolute; top: 1em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo9" style="color:gray; text-align:left; position:absolute; top: 3em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo10" style="color:gray; text-align:left; position:absolute; top: 5em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo11" style="color:gray; text-align:left; position:absolute; top: 7em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo12" style="color:gray; text-align:left; position:absolute; top: 9em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(127,64,64,0.5); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo13" style="color:gray; text-align:left; position:absolute; top: 11em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>  
+</section>
+<section data-auto-animate>
+  <div data-id="ntitle" style="position: absolute; top:-1.3em; left:1em;">nodejs</div>
+  <div data-id="quxdoo" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 14em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="quxdoo1" style="position:absolute; top:0.5em; left: 1.5em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo2" style="position:absolute; top:0.5em; left: 5em; height: 3em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo3" style="position:absolute; top:0.5em; left: 8.5em; height: 9em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>  
+  <div data-id="quxdoo4" style="position:absolute; top:0.5em; left: 1.5em; top: 6.7em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo5" style="position:absolute; top:0.5em; left: 5em; top: 3.7em; height: 9em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo6" style="position:absolute; top:0.5em; left: 8.5em; top: 9.7em; height: 3em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo7" style="color:gray; text-align:center; padding:1em; position:absolute; top: 0;left:17em; height: 11em; width: 4em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo8" style="color:gray; text-align:left; position:absolute; top: 1em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo9" style="color:gray; text-align:left; position:absolute; top: 3em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo10" style="color:gray; text-align:left; position:absolute; top: 5em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo11" style="color:gray; text-align:left; position:absolute; top: 7em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo12" style="color:gray; text-align:left; position:absolute; top: 9em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo13" style="color:gray; text-align:left; position:absolute; top: 11em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(127,64,64,0.5); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>  
+</section>
+<!--section data-auto-animate>
+  <div data-id="ntitle" style="position: absolute; top:-1.3em; left:1em;">nodejs</div>
+  <div data-id="quxdoo" style="color:gray; text-align:left; padding:1em; position:absolute; top: 0;left:0; height: 11em; width: 14em; background-color:rgba(64,64,64,1); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;">
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■<br>
+    ■■■■■■■■■■■■■■■■■■■■■■■■■■■<br>
+  </div>
+  <div data-id="quxdoo1" style="position:absolute; top:0.5em; left: 1.5em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo2" style="position:absolute; top:0.5em; left: 5em; height: 3em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo3" style="position:absolute; top:0.5em; left: 8.5em; height: 9em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>  
+  <div data-id="quxdoo4" style="position:absolute; top:0.5em; left: 1.5em; top: 6.7em; height: 6em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo5" style="position:absolute; top:0.5em; left: 5em; top: 3.7em; height: 9em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo6" style="position:absolute; top:0.5em; left: 8.5em; top: 9.7em; height: 3em; width: 2em; background-color:rgba(127,64,64,0.5); border-radius:5px;"></div>
+  <div data-id="quxdoo7" style="color:gray; text-align:center; padding:1em; position:absolute; top: 0;left:17em; height: 11em; width: 4em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo8" style="color:gray; text-align:left; position:absolute; top: 1em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo9" style="color:gray; text-align:left; position:absolute; top: 3em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo10" style="color:gray; text-align:left; position:absolute; top: 5em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo11" style="color:gray; text-align:left; position:absolute; top: 7em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo12" style="color:gray; text-align:left; position:absolute; top: 9em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>
+  <div data-id="quxdoo13" style="color:gray; text-align:left; position:absolute; top: 11em; left:19em; height: 1.5em; width: 1.5em; background-color:rgba(64,64,64,0); border-width:2px; border-radius:5px; border-color:rgba(80,80,80,1); border-style:solid;"></div>  
+</section -->
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <h3>Take-aways</h3>
+  <ul>
+    <li>Concurrency in node !== parallelism</li>
+    <li>multi-threading is hidden in the thread pool (libuv)</li>
+    <li>Be mindful of shared state in event-driven code</li>
+    <li>Design for unexpected things "for some reason"</li>
+    <li class="fragment">(bonus) pure functions with no side effects may avoid critical sections</li>
+  </ul>
+</section>
+
+<section data-background-gradient="linear-gradient(to bottom, #283b3b, #171717)" >
+  <h3>Credits</h3>
+  <ul>
+    <li>Gabriel Périard</li>
+    <li>Julian Garritano</li>
+    <li>Alexandre Brun</li>
+    <li>Mike Spensieri</li>
+    <li>Alex "AJ" Sincennes</li>
+    <li>#sunco-f-node-20-upgrade peeps</li>
+  </ul>
+</section>
+
+<section>
+  <ul>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Concurrency_(computer_science)">Wikipedia on concurrency</a>
+    </li>
+    <li>
+      <a href="https://web.mit.edu/6.005/www/fa14/classes/17-concurrency/#:~:text=Concurrency%20means%20multiple%20computations%20are,cores%20on%20a%20single%20chip">MIT on concurrency</a>
+    </li>
+    <li>
+      <a href="https://aws.amazon.com/builders-library/using-load-shedding-to-avoid-overload/">AWS on load shedding</a>
+    </li>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/The_Power_of_10:_Rules_for_Developing_Safety-Critical_Code">NASA's Power of Ten rules</a>
+    </li>
+  </ul>
+</section>
+
+<section>
+  Thanks! 🐛
+</section>
+
+      </div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+		</script>
+	</body>
+</html>
