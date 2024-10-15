@@ -1,0 +1,262 @@
+Concurrency
+a bug story 🐛
+Outline
+Some stuff to talk about.
+- This talk started out being called "Concurrency - a bug story", but as I began to fill in the details
+of the talk, I realized this title probably isn't the best because concurrency is not really a "thing"
+in nodeJS development in the traditional sense. We don't have concurrency in the same way we have
+concurrency in a real-time, multi-threaded C++ application for example, because "javascript is single
+threaded" (at least the user code runs in a single thread). However, this is event-driven code. Not 
+interrupt driven, but certainly event driven. And this brings up an interesting comparison between
+realtime softare, concurrency, reentrancy, and how the compare with asynchronous programming. So
+I think this is really a talk about the parallels between multi-threaded realtime systems programming
+and asynchronous event-driven programming in NodeJS. Both to have some high-level familiarity with
+some basic realtime programming concepts but also more specifically to how these manifest (or not)
+in an async programming environment like NodeJS, and what lessons we can learn from them. In that
+sense, the bug that features in this story is more of a starting point, a hook to hang our hat on
+talk about the deeper topic of realtime systems as they apply to multithreaded programming versus
+an asyncronous programming environment like NodeJS.
+- Set the stage. Talk about the problem: while deploying the node 20 upgrade we saw websocket pods crashing.
+- The investigation: tracking it down to the code where the problem was happening. 
+- A proposed solution: check `response.isWritable` before writing to the response.
+- How could this happen:
+  - look at the code. Discuss "event driven"
+  - error handlers trigger on request error
+  - subsequent code not preempted and contains async event-driven stuff to write to response
+- why did it happen
+  - "for some reason"
+  - this is a good view to take as a developer. things can happen for reasons you don't know
+  - defensive programming: understand that you won't know all the things that could happen
+- Deep dive based on Mike's repro
+  - web sdk opens long-polling connection, then quickly closes it
+     - talk about how long polling connections work
+  - causes error handler on 114 to fire, write 400 response (which never goes anywhere)
+  - subsequently, server tries to respond to long-polling connection and fails to write to response
+  - in node 16 the error was handled by line 115
+  - in node 20 the error bubbles up differently into unhandled exception (excactly why we don't know)
+... continued
+
+How does this illustrate real-time concepts?
+- could position the talk as a discussion of real-time concepts and their parallel concepts in node
+  (similar to the idea of NASA coding standards as applied to javascript, porting from one domain to another)
+
+- what is real-time software? is this problem related to real-time systems? (hint: real-time ~= event driven)
+- what is 'event driven'?
+  - the async nature of node brings a lot of overlaps with realtime design concerns but with a lot of nuance where they are not technically
+    the same thing but behave in very similar ways
+
+real-time: is event driven, responds to events with some time guarantee (ie typical response time) usually in ms.
+- subject to specified time constraints, respond "immediately" (for some definition of "immediately").
+- often used in safety-critical apps (fly-by-wire, braking systems etc that require immediate response, also in telecom)
+- note that with time guarantees you cannot allow system load to interfere with the deadlines
+  - must shed load to maintain time guarantees
+  - new requests should be shed so the system can honour those requests that it accepted to process
+    - if try to shed load by dropping older jobs you can get into a situation where nothing ever gets processed
+    - this would be interesting to illustrate!
+    - AWS article on load shedding: https://aws.amazon.com/builders-library/using-load-shedding-to-avoid-overload/
+  - RTOS scheduling systems can pre-empt tasks based on highest-priority first but for developers generally we are working with FIFO
+- event-driven is not necessarily real-time; you can have code that is designed to respond to events but without any specific
+  time guarantees or real concern about responding immediately (for some definition of immediately)
+
+- what is concurrency? is there concurrency in node? In this case? https://en.wikipedia.org/wiki/Concurrency_(computer_science)
+  - MIT on concurrency: https://web.mit.edu/6.005/www/fa14/classes/17-concurrency/#:~:text=Concurrency%20means%20multiple%20computations%20are,cores%20on%20a%20single%20chip)
+  - is there concurrency in node? Not of user code. But of async tasks yes. And async user code can be executed in an interleaved way with other sections of user code.
+  - with concurrency we often think of multi-threaded code. What is multi-threaded? Link to previous tech talk.
+    Is node multi threaded? Yes, but user code runs in a single thread. Hyperactive squid diagram?
+  - so if node has a thread pool is it "concurrent"? No. But by introducing asyncronicity it exhibits some characteristics of concurrency esp. multi-threading
+    on a single CPU (describe how this works by interrupting one thread mid-flow and scheduling another on the CPU).
+
+- what is re-entrant?
+  - this could be a good sub-topic! https://en.wikipedia.org/wiki/Reentrancy_(computing)
+  - we had a problem here with code that was not reentrant
+  - was the function interrupted? Sort of. The request error even handler ran in the user thread while subsequent async code was awaiting. 
+    we were not interrupted per se but we yeilded the user thread to handle other events. this is how node works and a good time to show
+    the hyperactive squid diagram again!
+
+- what is a critical section? is the code in question a "critical section"?
+  - again "sort of"? The response object is the "shared" resource although it is only accessed in the context of the single user thread.
+    but again, because of the async nature of node this response object behaves like a resource that is shared b/w two threads because
+    it could be altered by one event handler in the middle of our regular flow of execution.
+
+- are critical sections relevant in node? discuss multi-threaded vs single-threaded nature of node (user code
+  runs in single thread but bg threads handle async tasks)
+  - https://en.wikipedia.org/wiki/Critical_section
+  - critical section: resouce could be accessed by more than one thread whose operations could be interrupted by the other whilst the
+    operation on the resource was in an incomplete state.
+  - while this isn't technically what happened we do have two distinct flows of logic using the `response` with one of them altering
+    the response object in a way that the other does not expect.
+
+- what is mutual exclusion? Did we use a mutex? Would it help? Would it ever?
+  - acquiring mutex (lock) before entering critical section, releasing after
+  - waiting until you can acquire the lock before you proceed
+  - compare to async/await (find a good way to explain this)
+  - no, this is not a mutex situation. The resource is accessed by only one flow of logic at a time, but one flow of logic failed
+    to check the state of that resource (the response) before trying to do something with it.
+  - since mutex isn't applicable we might want to skip this section for time.
+
+- plug: making the case for functional programming: what does this have to do with functional programming? 
+  Talk about re-entrant, referentially transparent, how functional code
+  with no side effects, limiting state alterations to the "edges" removes concerns about "critical sections" / re-entrancy.
+
+  Recap
+
+  What do I want the audience to take away from this discussion of the problem and the overview of these real-time concepts?
+
+  TBD
+  - Review of some real-time fundamentals and their parallels in the node (async) programming environment
+  - understand the places in code where you access shared state or resources (like the response object), especially within
+    callbacks or event handlers. Investigate how that state / resource may have been altered while the callback or handler
+    was pending.
+
+  Node v.20 upgrade deployment:
+  Lots of websocket pods restarts...💥
+
+  Trying to write a response after it has been sent. ☠️
+
+Somewhwere in here:
+
+<p class="fragment current-visible">114 request error handler finalizes response</p>
+<p class="fragment current-visible">code from 117 is not pre-empted</p>
+<p class="fragment current-visible">131: _concatStream contains event-driven async code</p>
+<p class="fragment current-visible">Request error handler triggering before _concatStream event handlers causes response to be unwritable...</p>
+<p class="fragment current-visible">114 request error handler finalizes response</p>
+
+
+handle: function(request, response) {
+    var requestUrl    = url.parse(request.url, true),
+        requestMethod = request.method,
+        self          = this;
+
+    request.originalUrl = request.url;
+
+    request.on('error', function(error) { self._returnError(response, error) });
+    response.on('error', function(error) { self._returnError(null, error) });
+
+    if (this._static.test(requestUrl.pathname))
+      return this._static.call(request, response);
+
+    // http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
+    if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST')
+      return this._handleOptions(request, response);
+
+    if (EventSource.isEventSource(request))
+      return this.handleEventSource(request, response);
+
+    if (requestMethod === 'GET')
+      return this._callWithParams(request, response, requestUrl.query);
+
+    if (requestMethod === 'POST')
+      return this._concatStream(request, function(data) {
+        var type   = (request.headers['content-type'] || '').split(';')[0],
+            params = (type === 'application/json')
+                   ? { message: data }
+                   : querystring.parse(data);
+
+        request.body = data;
+        this._callWithParams(request, response, params);
+      }, this);
+
+    this._returnError(response, { message: 'Unrecognized request type' });
+  },
+
+another code blob
+
+  _concatStream: function(stream, callback, context) {
+    var chunks = [],
+        length = 0;
+
+    stream.on('data', function(chunk) {
+      chunks.push(chunk);
+      length += chunk.length;
+    });
+
+    stream.on('end', function() {
+      var buffer = Buffer.alloc(length),
+          offset = 0;
+
+      for (var i = 0, n = chunks.length; i < n; i++) {
+        chunks[i].copy(buffer, offset);
+        offset += chunks[i].length;
+      }
+      callback.call(context, buffer.toString('utf8'));
+    });
+  },
+
+
+Another code blob
+
+ _callWithParams: function(request, response, params) {
+    if (!params.message)
+      return this._returnError(response, {message: 'Received request with no message: ' + this._formatRequest(request)});
+
+    try {
+      this.debug('Received message via HTTP ' + request.method + ': ?', params.message);
+
+      var message = JSON.parse(params.message),
+          jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
+          isGet   = (request.method === 'GET'),
+          type    = isGet ? this.TYPE_SCRIPT : this.TYPE_JSON,
+          headers = Faye.extend({}, type),
+          origin  = request.headers.origin;
+
+      if (origin) headers['Access-Control-Allow-Origin'] = origin;
+      headers['Cache-Control'] = 'no-cache, no-store';
+
+      this._server.process(message, request, function(replies) {
+        var body = Faye.toJSON(replies);
+        if (isGet) body = jsonp + '(' + this._jsonpEscape(body) + ');';
+        headers['Content-Length'] = new Buffer(body, 'utf8').length.toString();
+        headers['Connection'] = 'close';
+
+        this.debug('HTTP response: ?', body);
+        response.writeHead(200, headers);
+        response.end(body);
+      }, this);
+    } catch (error) {
+      this._returnError(response, error);
+    }
+  },
+
+Details of how long polling works. Server holds the connection open for some pre-defined timeout and responds... but it can't respond because...
+
+https://www.pubnub.com/guides/long-polling/
+
+Long polling is used in real-time web applications to achieve near-instantaneous communication between the client and the web server. It is particularly useful in chat and messaging applications where real-time updates are crucial.
+
+In traditional HTTP communication, the client sends a new request to the server and waits for a response. This is known as short polling. However, in real-time scenarios, short polling may not be efficient as it requires frequent requests to the server, resulting in unnecessary network overhead and increased latency.
+
+On the other hand, long polling improves efficiency by keeping the request open for an extended period until new data is available. The server holds the request open and waits until it has new information to send back to the client. Once the server has new data, it responds to the client, which can then process the data and initiate a new long polling request.
+
+By maintaining a long-lived connection between the client and the server, long polling reduces the number of requests, minimizes latency, and improves real-time communication. This makes it ideal in use cases that require an effective technique for building scalable and responsive chat and messaging applications as well as other apps that make use of real time data like games.
+
+How does long polling work?
+Long polling is a technique used in real-time communication to achieve near-instantaneous message delivery between clients and servers. It is particularly useful in building chat and messaging applications where low latency and real-time updates are crucial.
+
+Traditionally, web browsers use a pull-based approach to fetch data from servers. The client sends a request to the server, which responds with the requested data. This approach, known as short polling, can create delays in communication as the client has to send requests to check for updates repeatedly.
+
+On the other hand, long polling is a push-based approach that allows the server to send updates to the client as soon as they are available. Here's how it works:
+
+The client initiates a request to the server, typically through an HTTP request.
+
+Instead of immediately responding, the server holds the request open, keeping the connection active.
+
+If no new data is available, the server waits until it has something to send back.
+
+Once the server has new data or a predefined timeout occurs, it responds to the client with the latest information.
+
+Upon receiving the response, the client immediately sends another request to the server to maintain the connection.
+
+This cycle of sending requests and receiving responses continues, ensuring real-time updates.
+
+Long polling effectively simulates a real-time connection between the client and the server by keeping the request-response cycle open for an extended period. It allows the server to push updates to the client as soon as they are available and eliminates the need for the client to check for updates repeatedly.
+
+What actually happens:
+<li>For "some reason"* the web sdk opens both a long-polling connection AND a websocket connection to the monolith.
+<li>Also for "some reason" the client closes the long-polling connection almost immediately. This causes the node_adapter on the server side
+    to run the error handler on line 114 and try to respond with a 400 (which never goes anywhere b/c the client is already closed, but it doesn't crash).
+<li>After 55s the long-polling timeout is up and the server tries to respond with the latest data which is where the second attempt to write to the headers happens.
+    since line 114 already wrote headers on the response object and tried to send it, trying to write to the response again fails.
+<li>in node 16 the response error handler on line 115 would get triggered and handle the error, but in node 20 the error bubbles up differently and doesn't
+    trigger the line 115 error handler. Instead it bubbles up in to an unhandled exception and crashes the whole process.
+* (This might be just how the websocket library works, like using long-polling as a fallback in case the server doesn't support websockets).
+Todo: find out what lib the web sdk uses for websockets and then check the lib docs to see if/how it uses long-polling
